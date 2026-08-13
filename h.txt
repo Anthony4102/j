@@ -1,0 +1,7 @@
+can you assist me on making a budget tracker in excel. it should have an input where i can choose where to add or subract my budget. it should track my daily, monthly and yearly transactions of goin in and out money. it should also have summary of the income, expense, bill, essentials, savings, credit card, non essential and extra. i should also can sort and filter or search specific data to the excel.
+
+### build the actual Excel template
+
+lay out the **complete workbook**, including the sheets, dropdowns, formulas, automatic daily/monthly/yearly summaries, category breakdowns, filters, and dashboard.
+
+also make it **₱ Philippine-peso based** and design it so that you only need to enter a transaction once—the rest of the workbook updates automatically.
