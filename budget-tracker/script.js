@@ -1,25 +1,41 @@
 /* =========================================================
    BUDGET TRACKER
    script.js
-   Supabase + Local Fallback Version
+   Supabase + Local Storage Fallback
 ========================================================= */
+
 
 /* =========================================================
    SUPABASE CONFIGURATION
 ========================================================= */
 
 /*
- * Replace these with your actual Supabase project values.
- *
- * IMPORTANT:
- * Use your PUBLISHABLE key here.
- * NEVER put your secret/service_role key in browser code.
+ * YOUR SUPABASE PROJECT
  */
-const SUPABASE_URL = "YOUR_SUPABASE_URL";
-const SUPABASE_KEY = "YOUR_SUPABASE_PUBLISHABLE_KEY";
+const SUPABASE_URL =
+    "https://wmedotwgqrsgrhjdzbbn.supabase.co";
+
+
+/*
+ * IMPORTANT:
+ *
+ * Replace the value below with your Supabase
+ * PUBLISHABLE key.
+ *
+ * It usually looks like:
+ *
+ * sb_publishable_xxxxxxxxxxxxxxxxx
+ *
+ * NEVER put your service_role / secret key here.
+ */
+const SUPABASE_KEY =
+    "sb_publishable_6NI-3Sg2gv0NSEm7mBddHw_kNi2sg-f";
+
 
 let supabaseClient = null;
+
 let supabaseConnected = false;
+
 
 /* =========================================================
    APPLICATION CONSTANTS
@@ -34,31 +50,54 @@ const CATEGORIES = [
     "Extra"
 ];
 
+
 const CATEGORY_COLORS = {
+
     "Bill": "#ef4444",
+
     "Essential": "#f97316",
+
     "Savings": "#8b5cf6",
+
     "Credit Card": "#ec4899",
+
     "Non-Essential": "#eab308",
+
     "Extra": "#06b6d4"
+
 };
+
 
 const DEFAULT_BUDGETS = {
+
     "Bill": 0,
+
     "Essential": 0,
+
     "Savings": 0,
+
     "Credit Card": 0,
+
     "Non-Essential": 0,
+
     "Extra": 0
+
 };
+
 
 const STORAGE_KEYS = {
-    transactions: "budgetTracker_transactions",
-    budgets: "budgetTracker_budgets"
+
+    transactions:
+        "budgetTracker_transactions",
+
+    budgets:
+        "budgetTracker_budgets"
+
 };
 
+
 /* =========================================================
-   DATA
+   APPLICATION STATE
 ========================================================= */
 
 let transactions = [];
@@ -77,34 +116,57 @@ let incomeExpenseChart = null;
 
 let toastTimer = null;
 
+
 /* =========================================================
    INITIALIZATION
 ========================================================= */
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
 
-    setDefaultDates();
+        console.log(
+            "Budget Tracker starting..."
+        );
 
-    setupEvents();
 
-    const connected = initializeSupabase();
+        setDefaultDates();
 
-    if (connected) {
 
-        await Promise.all([
-            loadTransactions(),
-            loadBudgets()
-        ]);
+        setupEvents();
 
-    } else {
 
-        loadLocalData();
+        const connected =
+            initializeSupabase();
+
+
+        if (connected) {
+
+            await Promise.all([
+                loadTransactions(),
+                loadBudgets()
+            ]);
+
+        } else {
+
+            loadLocalData();
+
+        }
+
+
+        updateDatabaseStatus();
+
+
+        render();
+
+
+        console.log(
+            "Budget Tracker ready."
+        );
 
     }
+);
 
-    render();
-
-});
 
 /* =========================================================
    SUPABASE INITIALIZATION
@@ -112,42 +174,68 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 function initializeSupabase() {
 
+    /*
+     * Check Supabase library
+     */
     if (!window.supabase) {
 
-        console.warn(
-            "Supabase library was not loaded. Using local storage."
+        console.error(
+            "Supabase library was not loaded."
+        );
+
+        supabaseConnected = false;
+
+        showToast(
+            "Supabase library unavailable. Using local storage."
+        );
+
+        return false;
+    }
+
+
+    /*
+     * Check URL
+     */
+    if (
+        !SUPABASE_URL ||
+        SUPABASE_URL.includes(
+            "YOUR_SUPABASE"
+        )
+    ) {
+
+        console.error(
+            "Supabase URL is not configured."
+        );
+
+        supabaseConnected = false;
+
+        return false;
+    }
+
+
+    /*
+     * Check key
+     */
+    if (
+        !SUPABASE_KEY ||
+        SUPABASE_KEY.includes(
+            "PASTE_YOUR"
+        )
+    ) {
+
+        console.error(
+            "Supabase publishable key is not configured."
         );
 
         showToast(
-            "Supabase unavailable. Using local storage."
+            "Add your Supabase publishable key to script.js."
         );
+
+        supabaseConnected = false;
 
         return false;
     }
 
-    if (
-        !SUPABASE_URL ||
-        SUPABASE_URL === "YOUR_SUPABASE_URL"
-    ) {
-
-        console.warn(
-            "Supabase URL has not been configured."
-        );
-
-        return false;
-    }
-
-    if (
-        !SUPABASE_KEY ||
-        SUPABASE_KEY === "YOUR_SUPABASE_PUBLISHABLE_KEY"
-    ) {
-
-        console.warn(
-            "Supabase publishable key has not been configured."
-        );
-
-        return false;
-    }
 
     try {
 
@@ -157,11 +245,14 @@ function initializeSupabase() {
                 SUPABASE_KEY
             );
 
+
         supabaseConnected = true;
+
 
         console.log(
             "Supabase connected."
         );
+
 
         return true;
 
@@ -172,16 +263,64 @@ function initializeSupabase() {
             error
         );
 
+
         supabaseClient = null;
+
         supabaseConnected = false;
+
 
         showToast(
             "Could not connect to Supabase."
         );
 
+
         return false;
     }
 }
+
+
+/* =========================================================
+   DATABASE STATUS
+========================================================= */
+
+function updateDatabaseStatus() {
+
+    const status =
+        document.getElementById(
+            "databaseStatus"
+        );
+
+
+    const dot =
+        document.getElementById(
+            "databaseStatusDot"
+        );
+
+
+    if (!status || !dot) {
+
+        return;
+    }
+
+
+    if (supabaseConnected) {
+
+        status.textContent =
+            "Supabase Connected";
+
+        dot.style.background =
+            "#16a34a";
+
+    } else {
+
+        status.textContent =
+            "Local Storage";
+
+        dot.style.background =
+            "#f59e0b";
+    }
+}
+
 
 /* =========================================================
    LOCAL STORAGE
@@ -196,21 +335,31 @@ function loadLocalData() {
                 STORAGE_KEYS.transactions
             );
 
+
         const savedBudgets =
             localStorage.getItem(
                 STORAGE_KEYS.budgets
             );
 
+
         transactions =
             savedTransactions
-                ? JSON.parse(savedTransactions)
+                ? JSON.parse(
+                    savedTransactions
+                )
                 : [];
 
+
         budgets = {
+
             ...DEFAULT_BUDGETS,
+
             ...(savedBudgets
-                ? JSON.parse(savedBudgets)
+                ? JSON.parse(
+                    savedBudgets
+                )
                 : {})
+
         };
 
     } catch (error) {
@@ -220,7 +369,9 @@ function loadLocalData() {
             error
         );
 
+
         transactions = [];
+
 
         budgets = {
             ...DEFAULT_BUDGETS
@@ -228,18 +379,24 @@ function loadLocalData() {
     }
 }
 
+
 function saveLocalData() {
 
     try {
 
         localStorage.setItem(
             STORAGE_KEYS.transactions,
-            JSON.stringify(transactions)
+            JSON.stringify(
+                transactions
+            )
         );
+
 
         localStorage.setItem(
             STORAGE_KEYS.budgets,
-            JSON.stringify(budgets)
+            JSON.stringify(
+                budgets
+            )
         );
 
     } catch (error) {
@@ -250,6 +407,7 @@ function saveLocalData() {
         );
     }
 }
+
 
 /* =========================================================
    LOAD TRANSACTIONS
@@ -264,20 +422,23 @@ async function loadTransactions() {
         return;
     }
 
+
     try {
 
         const {
             data,
             error
-        } = await supabaseClient
-            .from("transactions")
-            .select("*")
-            .order(
-                "transaction_date",
-                {
-                    ascending: false
-                }
-            );
+        } =
+            await supabaseClient
+                .from("transactions")
+                .select("*")
+                .order(
+                    "transaction_date",
+                    {
+                        ascending: false
+                    }
+                );
+
 
         if (error) {
 
@@ -286,19 +447,45 @@ async function loadTransactions() {
                 error
             );
 
+
             showToast(
-                "Could not load transactions."
+                "Could not load transactions. Using local data."
             );
+
 
             loadLocalData();
 
+
+            /*
+             * Supabase is not usable if the
+             * table/query is failing.
+             */
             return;
         }
+
 
         transactions =
             (data || []).map(
                 normalizeTransaction
             );
+
+
+        /*
+         * Keep local backup.
+         */
+        try {
+
+            localStorage.setItem(
+                STORAGE_KEYS.transactions,
+                JSON.stringify(
+                    transactions
+                )
+            );
+
+        } catch {
+
+            /* Ignore local backup errors. */
+        }
 
     } catch (error) {
 
@@ -307,9 +494,11 @@ async function loadTransactions() {
             error
         );
 
+
         loadLocalData();
     }
 }
+
 
 /* =========================================================
    LOAD BUDGETS
@@ -319,17 +508,22 @@ async function loadBudgets() {
 
     if (!supabaseClient) {
 
+        loadLocalBudgets();
+
         return;
     }
+
 
     try {
 
         const {
             data,
             error
-        } = await supabaseClient
-            .from("budgets")
-            .select("*");
+        } =
+            await supabaseClient
+                .from("budgets")
+                .select("*");
+
 
         if (error) {
 
@@ -338,18 +532,17 @@ async function loadBudgets() {
                 error
             );
 
-            /*
-             * Keep default/local budgets instead
-             * of destroying the current state.
-             */
+
             loadLocalBudgets();
 
             return;
         }
 
+
         budgets = {
             ...DEFAULT_BUDGETS
         };
+
 
         (data || []).forEach(
             row => {
@@ -361,10 +554,14 @@ async function loadBudgets() {
                 ) {
 
                     budgets[row.category] =
-                        Number(row.amount) || 0;
+                        Number(
+                            row.amount
+                        ) || 0;
                 }
+
             }
         );
+
 
         saveLocalBudgets();
 
@@ -375,9 +572,11 @@ async function loadBudgets() {
             error
         );
 
+
         loadLocalBudgets();
     }
 }
+
 
 /* =========================================================
    LOCAL BUDGET HELPERS
@@ -392,11 +591,15 @@ function loadLocalBudgets() {
                 STORAGE_KEYS.budgets
             );
 
+
         budgets = {
+
             ...DEFAULT_BUDGETS,
+
             ...(saved
                 ? JSON.parse(saved)
                 : {})
+
         };
 
     } catch {
@@ -407,13 +610,16 @@ function loadLocalBudgets() {
     }
 }
 
+
 function saveLocalBudgets() {
 
     try {
 
         localStorage.setItem(
             STORAGE_KEYS.budgets,
-            JSON.stringify(budgets)
+            JSON.stringify(
+                budgets
+            )
         );
 
     } catch (error) {
@@ -425,11 +631,14 @@ function saveLocalBudgets() {
     }
 }
 
+
 /* =========================================================
    NORMALIZE TRANSACTION
 ========================================================= */
 
-function normalizeTransaction(transaction) {
+function normalizeTransaction(
+    transaction
+) {
 
     return {
 
@@ -470,8 +679,9 @@ function normalizeTransaction(transaction) {
     };
 }
 
+
 /* =========================================================
-   EVENT LISTENERS
+   EVENTS
 ========================================================= */
 
 function setupEvents() {
@@ -481,10 +691,12 @@ function setupEvents() {
             "transactionForm"
         );
 
+
     const budgetForm =
         document.getElementById(
             "budgetForm"
         );
+
 
     if (transactionForm) {
 
@@ -494,6 +706,7 @@ function setupEvents() {
         );
     }
 
+
     if (budgetForm) {
 
         budgetForm.addEventListener(
@@ -502,10 +715,12 @@ function setupEvents() {
         );
     }
 
+
     const searchInput =
         document.getElementById(
             "searchInput"
         );
+
 
     if (searchInput) {
 
@@ -515,10 +730,12 @@ function setupEvents() {
         );
     }
 
+
     const filterType =
         document.getElementById(
             "filterType"
         );
+
 
     if (filterType) {
 
@@ -528,10 +745,12 @@ function setupEvents() {
         );
     }
 
+
     const filterCategory =
         document.getElementById(
             "filterCategory"
         );
+
 
     if (filterCategory) {
 
@@ -541,10 +760,27 @@ function setupEvents() {
         );
     }
 
+
+    const filterAccount =
+        document.getElementById(
+            "filterAccount"
+        );
+
+
+    if (filterAccount) {
+
+        filterAccount.addEventListener(
+            "change",
+            renderTransactions
+        );
+    }
+
+
     const filterDateFrom =
         document.getElementById(
             "filterDateFrom"
         );
+
 
     if (filterDateFrom) {
 
@@ -554,10 +790,12 @@ function setupEvents() {
         );
     }
 
+
     const filterDateTo =
         document.getElementById(
             "filterDateTo"
         );
+
 
     if (filterDateTo) {
 
@@ -567,10 +805,12 @@ function setupEvents() {
         );
     }
 
+
     const periodDate =
         document.getElementById(
             "periodDate"
         );
+
 
     if (periodDate) {
 
@@ -580,108 +820,132 @@ function setupEvents() {
         );
     }
 
-    document
-        .querySelectorAll(".period-btn")
-        .forEach(button => {
 
-            button.addEventListener(
-                "click",
-                () => {
-
-                    document
-                        .querySelectorAll(
-                            ".period-btn"
-                        )
-                        .forEach(
-                            btn =>
-                                btn.classList.remove(
-                                    "active"
-                                )
-                        );
-
-                    button.classList.add(
-                        "active"
-                    );
-
-                    currentPeriod =
-                        button.dataset.period ||
-                        "daily";
-
-                    render();
-                }
-            );
-
-        });
-
-    /*
-     * Optional clear filters button.
-     * Works if your HTML has:
-     * id="clearFilters"
-     */
-    const clearFilters =
-        document.getElementById(
-            "clearFilters"
-        );
-
-    if (clearFilters) {
-
-        clearFilters.addEventListener(
-            "click",
-            clearTransactionFilters
-        );
-    }
-
-    /*
-     * Optional refresh button.
-     */
-    const refreshButton =
-        document.getElementById(
-            "refreshData"
-        );
-
-    if (refreshButton) {
-
-        refreshButton.addEventListener(
-            "click",
-            refreshData
-        );
-    }
-
-    /*
-     * Optional sort headers.
-     */
     document
         .querySelectorAll(
-            "[data-sort]"
+            ".period-btn"
         )
-        .forEach(element => {
+        .forEach(
+            button => {
 
-            element.addEventListener(
-                "click",
-                () => {
+                button.addEventListener(
+                    "click",
+                    () => {
 
-                    sortTransactions(
-                        element.dataset.sort
-                    );
+                        document
+                            .querySelectorAll(
+                                ".period-btn"
+                            )
+                            .forEach(
+                                btn =>
+                                    btn.classList.remove(
+                                        "active"
+                                    )
+                            );
 
-                }
-            );
 
-        });
+                        button.classList.add(
+                            "active"
+                        );
+
+
+                        currentPeriod =
+                            button.dataset.period ||
+                            "daily";
+
+
+                        render();
+
+                    }
+                );
+
+            }
+        );
+
+
+    /*
+     * ESCAPE KEY
+     */
+
+    window.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key ===
+                "Escape"
+            ) {
+
+                closeTransactionModal();
+
+                closeBudgetModal();
+            }
+
+        }
+    );
+
+
+    /*
+     * BACKDROP CLICK
+     */
+
+    window.addEventListener(
+        "click",
+        event => {
+
+            const transactionModal =
+                document.getElementById(
+                    "transactionModal"
+                );
+
+
+            const budgetModal =
+                document.getElementById(
+                    "budgetModal"
+                );
+
+
+            if (
+                transactionModal &&
+                event.target ===
+                    transactionModal
+            ) {
+
+                closeTransactionModal();
+            }
+
+
+            if (
+                budgetModal &&
+                event.target ===
+                    budgetModal
+            ) {
+
+                closeBudgetModal();
+            }
+
+        }
+    );
 }
+
 
 /* =========================================================
    ADD TRANSACTION
 ========================================================= */
 
-async function addTransaction(event) {
+async function addTransaction(
+    event
+) {
 
     event.preventDefault();
+
 
     const type =
         document.getElementById(
             "transactionType"
-        )?.value || "expense";
+        )?.value ||
+        "expense";
+
 
     const amount =
         Number(
@@ -690,33 +954,50 @@ async function addTransaction(event) {
             )?.value
         );
 
+
     const date =
         document.getElementById(
             "transactionDate"
         )?.value ||
         getLocalDate();
 
+
     const category =
         document.getElementById(
             "category"
-        )?.value || "";
+        )?.value ||
+        "";
+
 
     const account =
         document.getElementById(
             "account"
-        )?.value || "";
+        )?.value ||
+        "";
+
 
     const description =
         document.getElementById(
             "description"
-        )?.value.trim() || "";
+        )?.value
+            .trim() ||
+        "";
+
 
     const notes =
         document.getElementById(
             "notes"
-        )?.value.trim() || "";
+        )?.value
+            .trim() ||
+        "";
 
-    if (!Number.isFinite(amount) || amount <= 0) {
+
+    if (
+        !Number.isFinite(
+            amount
+        ) ||
+        amount <= 0
+    ) {
 
         showToast(
             "Please enter a valid amount."
@@ -724,6 +1005,7 @@ async function addTransaction(event) {
 
         return;
     }
+
 
     if (!date) {
 
@@ -734,6 +1016,7 @@ async function addTransaction(event) {
         return;
     }
 
+
     if (!description) {
 
         showToast(
@@ -742,6 +1025,7 @@ async function addTransaction(event) {
 
         return;
     }
+
 
     if (
         type === "expense" &&
@@ -755,14 +1039,17 @@ async function addTransaction(event) {
         return;
     }
 
+
     const submitButton =
         event.target.querySelector(
             'button[type="submit"]'
         );
 
+
     if (submitButton) {
 
         submitButton.disabled = true;
+
         submitButton.dataset.originalText =
             submitButton.textContent;
 
@@ -770,12 +1057,11 @@ async function addTransaction(event) {
             "Saving...";
     }
 
+
     const localTransaction = {
 
         id:
-            crypto?.randomUUID
-                ? crypto.randomUUID()
-                : String(Date.now()),
+            createId(),
 
         type,
 
@@ -793,51 +1079,81 @@ async function addTransaction(event) {
 
     };
 
+
     try {
 
         /*
          * LOCAL MODE
          */
+
         if (!supabaseClient) {
 
             transactions.unshift(
                 localTransaction
             );
 
+
             saveLocalData();
+
 
             render();
 
+
             closeTransactionModal();
 
+
             resetTransactionForm();
+
 
             showToast(
                 "Transaction saved locally."
             );
 
+
             return;
         }
+
 
         /*
          * SUPABASE MODE
          */
+
         const {
             data,
             error
-        } = await supabaseClient
-            .from("transactions")
-            .insert({
-                transaction_date: date,
-                description,
-                amount,
-                transaction_type: type,
-                category: category || null,
-                account: account || null,
-                notes: notes || null
-            })
-            .select()
-            .single();
+        } =
+            await supabaseClient
+                .from("transactions")
+                .insert({
+
+                    transaction_date:
+                        date,
+
+                    description:
+                        description,
+
+                    amount:
+                        amount,
+
+                    transaction_type:
+                        type,
+
+                    category:
+                        category ||
+                        null,
+
+                    account:
+                        account ||
+                        null,
+
+                    notes:
+                        notes ||
+                        null
+
+                })
+                .select()
+                .single();
+
 
         if (error) {
 
@@ -846,23 +1162,35 @@ async function addTransaction(event) {
                 error
             );
 
+
             showToast(
                 error.message ||
                 "Failed to save transaction."
             );
 
+
             return;
         }
 
+
         transactions.unshift(
-            normalizeTransaction(data)
+            normalizeTransaction(
+                data
+            )
         );
+
+
+        saveLocalData();
+
 
         render();
 
+
         closeTransactionModal();
 
+
         resetTransactionForm();
+
 
         showToast(
             "Transaction saved!"
@@ -875,6 +1203,7 @@ async function addTransaction(event) {
             error
         );
 
+
         showToast(
             "Something went wrong while saving."
         );
@@ -883,7 +1212,9 @@ async function addTransaction(event) {
 
         if (submitButton) {
 
-            submitButton.disabled = false;
+            submitButton.disabled =
+                false;
+
 
             submitButton.textContent =
                 submitButton.dataset.originalText ||
@@ -892,8 +1223,34 @@ async function addTransaction(event) {
     }
 }
 
+
 /* =========================================================
-   RESET TRANSACTION FORM
+   CREATE ID
+========================================================= */
+
+function createId() {
+
+    if (
+        window.crypto &&
+        typeof window.crypto.randomUUID ===
+            "function"
+    ) {
+
+        return window.crypto.randomUUID();
+    }
+
+
+    return (
+        Date.now().toString() +
+        Math.random()
+            .toString(36)
+            .substring(2)
+    );
+}
+
+
+/* =========================================================
+   RESET FORM
 ========================================================= */
 
 function resetTransactionForm() {
@@ -903,15 +1260,18 @@ function resetTransactionForm() {
             "transactionForm"
         );
 
+
     if (form) {
 
         form.reset();
     }
 
+
     const dateInput =
         document.getElementById(
             "transactionDate"
         );
+
 
     if (dateInput) {
 
@@ -920,11 +1280,14 @@ function resetTransactionForm() {
     }
 }
 
+
 /* =========================================================
    DELETE TRANSACTION
 ========================================================= */
 
-async function deleteTransaction(id) {
+async function deleteTransaction(
+    id
+) {
 
     const transaction =
         transactions.find(
@@ -932,6 +1295,7 @@ async function deleteTransaction(id) {
                 String(t.id) ===
                 String(id)
         );
+
 
     if (!transaction) {
 
@@ -942,21 +1306,21 @@ async function deleteTransaction(id) {
         return;
     }
 
+
     const confirmed =
         window.confirm(
             `Delete "${transaction.description}" (${formatMoney(transaction.amount)})?`
         );
+
 
     if (!confirmed) {
 
         return;
     }
 
+
     try {
 
-        /*
-         * LOCAL MODE
-         */
         if (!supabaseClient) {
 
             transactions =
@@ -966,26 +1330,30 @@ async function deleteTransaction(id) {
                         String(id)
                 );
 
+
             saveLocalData();
 
+
             render();
+
 
             showToast(
                 "Transaction deleted."
             );
 
+
             return;
         }
 
-        /*
-         * SUPABASE MODE
-         */
+
         const {
             error
-        } = await supabaseClient
-            .from("transactions")
-            .delete()
-            .eq("id", id);
+        } =
+            await supabaseClient
+                .from("transactions")
+                .delete()
+                .eq("id", id);
+
 
         if (error) {
 
@@ -994,13 +1362,16 @@ async function deleteTransaction(id) {
                 error
             );
 
+
             showToast(
                 error.message ||
                 "Failed to delete transaction."
             );
 
+
             return;
         }
+
 
         transactions =
             transactions.filter(
@@ -1009,7 +1380,12 @@ async function deleteTransaction(id) {
                     String(id)
             );
 
+
+        saveLocalData();
+
+
         render();
+
 
         showToast(
             "Transaction deleted."
@@ -1022,11 +1398,13 @@ async function deleteTransaction(id) {
             error
         );
 
+
         showToast(
             "Something went wrong."
         );
     }
 }
+
 
 /* =========================================================
    PERIOD TRANSACTIONS
@@ -1039,21 +1417,24 @@ function getPeriodTransactions() {
             "periodDate"
         );
 
+
     const selectedDate =
         periodDate?.value ||
         getLocalDate();
 
+
     if (!selectedDate) {
 
-        return [...transactions];
+        return [
+            ...transactions
+        ];
     }
 
-    /*
-     * YYYY-MM-DD string comparisons are safe
-     * for this type of filtering.
-     */
 
-    if (currentPeriod === "daily") {
+    if (
+        currentPeriod ===
+        "daily"
+    ) {
 
         return transactions.filter(
             transaction =>
@@ -1062,10 +1443,12 @@ function getPeriodTransactions() {
         );
     }
 
+
     const selected =
         new Date(
             `${selectedDate}T00:00:00`
         );
+
 
     if (
         Number.isNaN(
@@ -1073,17 +1456,25 @@ function getPeriodTransactions() {
         )
     ) {
 
-        return [...transactions];
+        return [
+            ...transactions
+        ];
     }
 
-    if (currentPeriod === "monthly") {
+
+    if (
+        currentPeriod ===
+        "monthly"
+    ) {
 
         const year =
             selected.getFullYear();
+
 
         const month =
             selected.getMonth();
 
+
         return transactions.filter(
             transaction => {
 
@@ -1092,19 +1483,31 @@ function getPeriodTransactions() {
                         `${transaction.date}T00:00:00`
                     );
 
+
                 return (
-                    date.getFullYear() === year &&
-                    date.getMonth() === month
+
+                    date.getFullYear() ===
+                        year &&
+
+                    date.getMonth() ===
+                        month
+
                 );
+
             }
         );
     }
 
-    if (currentPeriod === "yearly") {
+
+    if (
+        currentPeriod ===
+        "yearly"
+    ) {
 
         const year =
             selected.getFullYear();
 
+
         return transactions.filter(
             transaction => {
 
@@ -1113,15 +1516,22 @@ function getPeriodTransactions() {
                         `${transaction.date}T00:00:00`
                     );
 
+
                 return (
-                    date.getFullYear() === year
+                    date.getFullYear() ===
+                    year
                 );
+
             }
         );
     }
 
-    return [...transactions];
+
+    return [
+        ...transactions
+    ];
 }
+
 
 /* =========================================================
    RENDER EVERYTHING
@@ -1140,6 +1550,7 @@ function render() {
     renderChart();
 }
 
+
 /* =========================================================
    SUMMARY
 ========================================================= */
@@ -1149,11 +1560,13 @@ function renderSummary() {
     const data =
         getPeriodTransactions();
 
+
     const income =
         sumTransactions(
             data,
             "income"
         );
+
 
     const expense =
         sumTransactions(
@@ -1161,46 +1574,72 @@ function renderSummary() {
             "expense"
         );
 
+
     const savings =
         data
             .filter(
                 t =>
-                    t.type === "expense" &&
-                    t.category === "Savings"
+                    t.type ===
+                        "expense" &&
+
+                    t.category ===
+                        "Savings"
             )
             .reduce(
-                (sum, t) =>
-                    sum + Number(t.amount || 0),
+                (
+                    sum,
+                    t
+                ) =>
+                    sum +
+                    Number(
+                        t.amount || 0
+                    ),
                 0
             );
 
+
     const balance =
-        income - expense;
+        income -
+        expense;
+
 
     setText(
         "totalIncome",
-        formatMoney(income)
+        formatMoney(
+            income
+        )
     );
+
 
     setText(
         "totalExpense",
-        formatMoney(expense)
+        formatMoney(
+            expense
+        )
     );
+
 
     setText(
         "totalSavings",
-        formatMoney(savings)
+        formatMoney(
+            savings
+        )
     );
+
 
     const balanceElement =
         document.getElementById(
             "balance"
         );
 
+
     if (balanceElement) {
 
         balanceElement.textContent =
-            formatMoney(balance);
+            formatMoney(
+                balance
+            );
+
 
         balanceElement.style.color =
             balance >= 0
@@ -1208,6 +1647,7 @@ function renderSummary() {
                 : "var(--danger)";
     }
 }
+
 
 /* =========================================================
    CATEGORY BREAKDOWN
@@ -1220,15 +1660,19 @@ function renderCategories() {
             "categoryBreakdown"
         );
 
+
     if (!container) {
 
         return;
     }
 
+
     const data =
         getPeriodTransactions();
 
+
     const totals = {};
+
 
     CATEGORIES.forEach(
         category => {
@@ -1237,71 +1681,111 @@ function renderCategories() {
                 data
                     .filter(
                         t =>
-                            t.type === "expense" &&
-                            t.category === category
+                            t.type ===
+                                "expense" &&
+
+                            t.category ===
+                                category
                     )
                     .reduce(
-                        (sum, t) =>
+                        (
+                            sum,
+                            t
+                        ) =>
                             sum +
-                            Number(t.amount || 0),
+                            Number(
+                                t.amount ||
+                                0
+                            ),
                         0
                     );
+
         }
     );
 
+
     const totalExpenses =
-        Object.values(totals)
-            .reduce(
-                (sum, value) =>
-                    sum + value,
-                0
-            );
+        Object.values(
+            totals
+        ).reduce(
+            (
+                sum,
+                value
+            ) =>
+                sum + value,
+            0
+        );
+
 
     container.innerHTML =
         CATEGORIES
-            .map(category => {
+            .map(
+                category => {
 
-                const amount =
-                    totals[category];
+                    const amount =
+                        totals[
+                            category
+                        ];
 
-                const percent =
-                    totalExpenses > 0
-                        ? (amount / totalExpenses) * 100
-                        : 0;
 
-                return `
-                    <div class="category-row">
+                    const percent =
+                        totalExpenses >
+                        0
+                            ? (
+                                amount /
+                                totalExpenses
+                            ) *
+                              100
+                            : 0;
 
-                        <div class="category-top">
 
-                            <span>
-                                ${escapeHTML(category)}
-                            </span>
+                    return `
 
-                            <strong>
-                                ${formatMoney(amount)}
-                            </strong>
+                        <div class="category-row">
+
+                            <div class="category-top">
+
+                                <span>
+                                    ${escapeHTML(
+                                        category
+                                    )}
+                                </span>
+
+                                <strong>
+                                    ${formatMoney(
+                                        amount
+                                    )}
+                                </strong>
+
+                            </div>
+
+                            <div class="progress">
+
+                                <div
+                                    class="progress-bar"
+                                    style="
+                                        width:${Math.min(
+                                            percent,
+                                            100
+                                        )}%;
+                                        background:${
+                                            CATEGORY_COLORS[
+                                                category
+                                            ]
+                                        };
+                                    "
+                                ></div>
+
+                            </div>
 
                         </div>
 
-                        <div class="progress">
-
-                            <div
-                                class="progress-bar"
-                                style="
-                                    width:${Math.min(percent, 100)}%;
-                                    background:${CATEGORY_COLORS[category]};
-                                "
-                            ></div>
-
-                        </div>
-
-                    </div>
-                `;
-
-            })
+                    `;
+                }
+            )
             .join("");
 }
+
 
 /* =========================================================
    BUDGET DISPLAY
@@ -1314,117 +1798,173 @@ function renderBudgets() {
             "budgetList"
         );
 
+
     if (!container) {
 
         return;
     }
 
+
     const data =
         getPeriodTransactions();
 
+
     container.innerHTML =
         CATEGORIES
-            .map(category => {
+            .map(
+                category => {
 
-                const spent =
-                    data
-                        .filter(
-                            t =>
-                                t.type === "expense" &&
-                                t.category === category
-                        )
-                        .reduce(
-                            (sum, t) =>
-                                sum +
-                                Number(t.amount || 0),
-                            0
+                    const spent =
+                        data
+                            .filter(
+                                t =>
+                                    t.type ===
+                                        "expense" &&
+
+                                    t.category ===
+                                        category
+                            )
+                            .reduce(
+                                (
+                                    sum,
+                                    t
+                                ) =>
+                                    sum +
+                                    Number(
+                                        t.amount ||
+                                        0
+                                    ),
+                                0
+                            );
+
+
+                    const limit =
+                        Number(
+                            budgets[
+                                category
+                            ]
+                        ) || 0;
+
+
+                    const percentage =
+                        limit > 0
+                            ? (
+                                spent /
+                                limit
+                            ) *
+                              100
+                            : 0;
+
+
+                    const width =
+                        Math.min(
+                            Math.max(
+                                percentage,
+                                0
+                            ),
+                            100
                         );
 
-                const limit =
-                    Number(
-                        budgets[category]
-                    ) || 0;
 
-                const percentage =
-                    limit > 0
-                        ? (spent / limit) * 100
-                        : 0;
+                    let color =
+                        "#16a34a";
 
-                const width =
-                    Math.min(
-                        Math.max(percentage, 0),
+
+                    if (
+                        percentage >=
                         100
-                    );
+                    ) {
 
-                let color =
-                    "#16a34a";
+                        color =
+                            "#dc2626";
 
-                if (percentage >= 100) {
+                    } else if (
+                        percentage >=
+                        80
+                    ) {
 
-                    color =
-                        "#dc2626";
+                        color =
+                            "#f59e0b";
+                    }
 
-                } else if (percentage >= 80) {
 
-                    color =
-                        "#f59e0b";
+                    return `
+
+                        <div class="budget-item">
+
+                            <div class="budget-name">
+
+                                <strong>
+                                    ${escapeHTML(
+                                        category
+                                    )}
+                                </strong>
+
+                                <span class="budget-number">
+
+                                    ${
+                                        limit > 0
+
+                                            ? `${formatMoney(
+                                                spent
+                                            )} / ${formatMoney(
+                                                limit
+                                            )}`
+
+                                            : `${formatMoney(
+                                                spent
+                                            )} / No limit`
+
+                                    }
+
+                                </span>
+
+                            </div>
+
+
+                            <div class="progress">
+
+                                <div
+                                    class="progress-bar"
+                                    style="
+                                        width:${width}%;
+                                        background:${color};
+                                    "
+                                ></div>
+
+                            </div>
+
+
+                            ${
+                                limit > 0
+
+                                    ? `
+
+                                        <div
+                                            style="
+                                                margin-top:5px;
+                                                font-size:12px;
+                                                color:${color};
+                                            "
+                                        >
+                                            ${percentage.toFixed(
+                                                0
+                                            )}% used
+                                        </div>
+
+                                    `
+
+                                    : ""
+                            }
+
+                        </div>
+
+                    `;
                 }
-
-                return `
-                    <div class="budget-item">
-
-                        <div class="budget-name">
-
-                            <strong>
-                                ${escapeHTML(category)}
-                            </strong>
-
-                            <span class="budget-number">
-
-                                ${
-                                    limit > 0
-                                        ? `${formatMoney(spent)} / ${formatMoney(limit)}`
-                                        : `${formatMoney(spent)} / No limit`
-                                }
-
-                            </span>
-
-                        </div>
-
-                        <div class="progress">
-
-                            <div
-                                class="progress-bar"
-                                style="
-                                    width:${width}%;
-                                    background:${color};
-                                "
-                            ></div>
-
-                        </div>
-
-                        ${
-                            limit > 0
-                                ? `
-                                    <div
-                                        style="
-                                            margin-top:5px;
-                                            font-size:12px;
-                                            color:${color};
-                                        "
-                                    >
-                                        ${percentage.toFixed(0)}% used
-                                    </div>
-                                `
-                                : ""
-                        }
-
-                    </div>
-                `;
-
-            })
+            )
             .join("");
 }
+
 
 /* =========================================================
    TRANSACTION TABLE
@@ -1437,100 +1977,157 @@ function renderTransactions() {
             "transactionTable"
         );
 
+
     if (!tbody) {
 
         return;
     }
 
+
     let data =
-        [...transactions];
+        [
+            ...transactions
+        ];
+
 
     const search =
         (
             document.getElementById(
                 "searchInput"
-            )?.value || ""
+            )?.value ||
+            ""
         )
             .toLowerCase()
             .trim();
 
+
     const type =
         document.getElementById(
             "filterType"
-        )?.value || "all";
+        )?.value ||
+        "all";
+
 
     const category =
         document.getElementById(
             "filterCategory"
-        )?.value || "all";
+        )?.value ||
+        "all";
+
+
+    const account =
+        document.getElementById(
+            "filterAccount"
+        )?.value ||
+        "all";
+
 
     const dateFrom =
         document.getElementById(
             "filterDateFrom"
-        )?.value || "";
+        )?.value ||
+        "";
+
 
     const dateTo =
         document.getElementById(
             "filterDateTo"
-        )?.value || "";
+        )?.value ||
+        "";
+
 
     /* SEARCH */
 
     if (search) {
 
         data =
-            data.filter(t => {
+            data.filter(
+                t => {
 
-                const searchable = [
+                    const searchable = [
 
-                    t.description,
+                        t.description,
 
-                    t.category,
+                        t.category,
 
-                    t.account,
+                        t.account,
 
-                    t.notes,
+                        t.notes,
 
-                    t.type,
+                        t.type,
 
-                    t.date
+                        t.date
 
-                ]
-                    .map(
-                        value =>
-                            String(
-                                value ?? ""
-                            ).toLowerCase()
-                    )
-                    .join(" ");
+                    ]
+                        .map(
+                            value =>
+                                String(
+                                    value ??
+                                    ""
+                                )
+                                    .toLowerCase()
+                        )
+                        .join(
+                            " "
+                        );
 
-                return searchable.includes(
-                    search
-                );
-            });
+
+                    return searchable.includes(
+                        search
+                    );
+
+                }
+            );
     }
+
 
     /* TYPE */
 
-    if (type !== "all") {
+    if (
+        type !==
+        "all"
+    ) {
 
         data =
             data.filter(
                 t =>
-                    t.type === type
+                    t.type ===
+                    type
             );
     }
+
 
     /* CATEGORY */
 
-    if (category !== "all") {
+    if (
+        category !==
+        "all"
+    ) {
 
         data =
             data.filter(
                 t =>
-                    t.category === category
+                    t.category ===
+                    category
             );
     }
+
+
+    /* ACCOUNT */
+
+    if (
+        account !==
+        "all"
+    ) {
+
+        data =
+            data.filter(
+                t =>
+                    t.account ===
+                    account
+            );
+    }
+
 
     /* DATE FROM */
 
@@ -1539,9 +2136,11 @@ function renderTransactions() {
         data =
             data.filter(
                 t =>
-                    t.date >= dateFrom
+                    t.date >=
+                    dateFrom
             );
     }
+
 
     /* DATE TO */
 
@@ -1550,9 +2149,11 @@ function renderTransactions() {
         data =
             data.filter(
                 t =>
-                    t.date <= dateTo
+                    t.date <=
+                    dateTo
             );
     }
+
 
     /* SORT */
 
@@ -1560,16 +2161,22 @@ function renderTransactions() {
         compareTransactions
     );
 
+
     /* EMPTY */
 
     if (!data.length) {
 
         tbody.innerHTML = `
+
             <tr>
+
                 <td colspan="7">
+
                     <div class="empty">
 
-                        <div style="font-size:40px;">
+                        <div
+                            style="font-size:40px;"
+                        >
                             📭
                         </div>
 
@@ -1578,159 +2185,226 @@ function renderTransactions() {
                         </p>
 
                     </div>
+
                 </td>
+
             </tr>
+
         `;
+
 
         return;
     }
+
 
     /* TABLE */
 
     tbody.innerHTML =
         data
-            .map(t => {
+            .map(
+                t => {
 
-                const id =
-                    escapeHTML(
-                        String(t.id)
-                    );
+                    const id =
+                        escapeHTML(
+                            String(
+                                t.id
+                            )
+                        );
 
-                return `
-                    <tr>
 
-                        <td>
-                            ${formatDate(t.date)}
-                        </td>
+                    return `
 
-                        <td>
+                        <tr>
 
-                            <strong>
-                                ${escapeHTML(
-                                    t.description
+                            <td>
+                                ${formatDate(
+                                    t.date
                                 )}
-                            </strong>
+                            </td>
 
-                            ${
-                                t.notes
-                                    ? `
-                                        <div
-                                            style="
-                                                font-size:11px;
-                                                color:#9ca3af;
-                                                margin-top:3px;
-                                            "
-                                        >
-                                            ${escapeHTML(t.notes)}
-                                        </div>
-                                    `
-                                    : ""
-                            }
 
-                        </td>
+                            <td>
 
-                        <td>
-
-                            <span class="badge">
-                                ${escapeHTML(
-                                    t.category || "—"
-                                )}
-                            </span>
-
-                        </td>
-
-                        <td>
-
-                            ${
-                                t.type === "income"
-                                    ? `
-                                        <span class="income-text">
-                                            Money In
-                                        </span>
-                                    `
-                                    : `
-                                        <span class="expense-text">
-                                            Money Out
-                                        </span>
-                                    `
-                            }
-
-                        </td>
-
-                        <td>
-
-                            <span
-                                class="${
-                                    t.type === "income"
-                                        ? "income-text"
-                                        : "expense-text"
-                                }"
-                            >
+                                <strong>
+                                    ${escapeHTML(
+                                        t.description
+                                    )}
+                                </strong>
 
                                 ${
-                                    t.type === "income"
-                                        ? "+"
-                                        : "-"
+                                    t.notes
+
+                                        ? `
+
+                                            <div
+                                                style="
+                                                    font-size:11px;
+                                                    color:#9ca3af;
+                                                    margin-top:3px;
+                                                "
+                                            >
+                                                ${escapeHTML(
+                                                    t.notes
+                                                )}
+                                            </div>
+
+                                        `
+
+                                        : ""
                                 }
 
-                                ${formatMoney(t.amount)}
+                            </td>
 
-                            </span>
 
-                        </td>
+                            <td>
 
-                        <td>
-                            ${escapeHTML(
-                                t.account || "—"
-                            )}
-                        </td>
+                                <span class="badge">
+                                    ${escapeHTML(
+                                        t.category ||
+                                        "—"
+                                    )}
+                                </span>
 
-                        <td>
+                            </td>
 
-                            <button
-                                type="button"
-                                class="delete-btn"
-                                data-delete-id="${id}"
-                                onclick="deleteTransaction(${JSON.stringify(String(t.id))})"
-                            >
-                                Delete
-                            </button>
 
-                        </td>
+                            <td>
 
-                    </tr>
-                `;
-            })
+                                ${
+                                    t.type ===
+                                    "income"
+
+                                        ? `
+
+                                            <span class="income-text">
+                                                Money In
+                                            </span>
+
+                                        `
+
+                                        : `
+
+                                            <span class="expense-text">
+                                                Money Out
+                                            </span>
+
+                                        `
+                                }
+
+                            </td>
+
+
+                            <td>
+
+                                <span
+                                    class="${
+                                        t.type ===
+                                        "income"
+
+                                            ? "income-text"
+
+                                            : "expense-text"
+                                    }"
+                                >
+
+                                    ${
+                                        t.type ===
+                                        "income"
+
+                                            ? "+"
+
+                                            : "-"
+                                    }
+
+                                    ${formatMoney(
+                                        t.amount
+                                    )}
+
+                                </span>
+
+                            </td>
+
+
+                            <td>
+                                ${escapeHTML(
+                                    t.account ||
+                                    "—"
+                                )}
+                            </td>
+
+
+                            <td>
+
+                                <button
+                                    type="button"
+                                    class="delete-btn"
+                                    onclick="deleteTransaction(${JSON.stringify(
+                                        String(
+                                            t.id
+                                        )
+                                    )})"
+                                >
+                                    Delete
+                                </button>
+
+                            </td>
+
+                        </tr>
+
+                    `;
+                }
+            )
             .join("");
 }
+
 
 /* =========================================================
    SORT
 ========================================================= */
 
-function sortTransactions(field) {
+function sortTransactions(
+    field
+) {
 
     const allowedFields = [
+
         "date",
+
         "amount",
+
         "description",
+
         "category",
+
         "account",
+
         "type"
+
     ];
 
+
     if (
-        !allowedFields.includes(field)
+        !allowedFields.includes(
+            field
+        )
     ) {
 
-        field = "date";
+        field =
+            "date";
     }
 
-    if (sortField === field) {
+
+    if (
+        sortField ===
+        field
+    ) {
 
         sortDirection =
-            sortDirection === "asc"
+            sortDirection ===
+            "asc"
+
                 ? "desc"
+
                 : "asc";
 
     } else {
@@ -1742,111 +2416,163 @@ function sortTransactions(field) {
             "desc";
     }
 
+
     renderTransactions();
 }
 
-function compareTransactions(a, b) {
+
+function compareTransactions(
+    a,
+    b
+) {
 
     let valueA;
+
     let valueB;
 
-    switch (sortField) {
+
+    switch (
+        sortField
+    ) {
 
         case "amount":
 
             valueA =
-                Number(a.amount) || 0;
+                Number(
+                    a.amount
+                ) || 0;
 
             valueB =
-                Number(b.amount) || 0;
+                Number(
+                    b.amount
+                ) || 0;
 
             break;
+
 
         case "description":
 
             valueA =
                 String(
-                    a.description || ""
-                ).toLowerCase();
+                    a.description ||
+                    ""
+                )
+                    .toLowerCase();
 
             valueB =
                 String(
-                    b.description || ""
-                ).toLowerCase();
+                    b.description ||
+                    ""
+                )
+                    .toLowerCase();
 
             break;
+
 
         case "category":
 
             valueA =
                 String(
-                    a.category || ""
-                ).toLowerCase();
+                    a.category ||
+                    ""
+                )
+                    .toLowerCase();
 
             valueB =
                 String(
-                    b.category || ""
-                ).toLowerCase();
+                    b.category ||
+                    ""
+                )
+                    .toLowerCase();
 
             break;
+
 
         case "account":
 
             valueA =
                 String(
-                    a.account || ""
-                ).toLowerCase();
+                    a.account ||
+                    ""
+                )
+                    .toLowerCase();
 
             valueB =
                 String(
-                    b.account || ""
-                ).toLowerCase();
+                    b.account ||
+                    ""
+                )
+                    .toLowerCase();
 
             break;
+
 
         case "type":
 
             valueA =
                 String(
-                    a.type || ""
-                ).toLowerCase();
+                    a.type ||
+                    ""
+                )
+                    .toLowerCase();
 
             valueB =
                 String(
-                    b.type || ""
-                ).toLowerCase();
+                    b.type ||
+                    ""
+                )
+                    .toLowerCase();
 
             break;
+
 
         case "date":
 
         default:
 
             valueA =
-                a.date || "";
+                a.date ||
+                "";
 
             valueB =
-                b.date || "";
+                b.date ||
+                "";
 
             break;
     }
 
-    if (valueA < valueB) {
 
-        return sortDirection === "asc"
-            ? -1
-            : 1;
+    if (
+        valueA <
+        valueB
+    ) {
+
+        return sortDirection ===
+            "asc"
+
+                ? -1
+
+                : 1;
     }
 
-    if (valueA > valueB) {
 
-        return sortDirection === "asc"
-            ? 1
-            : -1;
+    if (
+        valueA >
+        valueB
+    ) {
+
+        return sortDirection ===
+            "asc"
+
+                ? 1
+
+                : -1;
     }
+
 
     return 0;
 }
+
 
 /* =========================================================
    CHART
@@ -1859,10 +2585,12 @@ function renderChart() {
             "incomeExpenseChart"
         );
 
+
     if (!canvas) {
 
         return;
     }
+
 
     if (
         typeof Chart ===
@@ -1876,8 +2604,10 @@ function renderChart() {
         return;
     }
 
+
     const data =
         getPeriodTransactions();
+
 
     const income =
         sumTransactions(
@@ -1885,13 +2615,17 @@ function renderChart() {
             "income"
         );
 
+
     const expense =
         sumTransactions(
             data,
             "expense"
         );
 
-    if (incomeExpenseChart) {
+
+    if (
+        incomeExpenseChart
+    ) {
 
         try {
 
@@ -1899,97 +2633,151 @@ function renderChart() {
 
         } catch {
 
-            /* Ignore old chart errors. */
+            /* Ignore. */
         }
 
-        incomeExpenseChart = null;
+
+        incomeExpenseChart =
+            null;
     }
 
+
     const ctx =
-        canvas.getContext("2d");
+        canvas.getContext(
+            "2d"
+        );
+
 
     if (!ctx) {
 
         return;
     }
 
+
     incomeExpenseChart =
         new Chart(
             ctx,
             {
+
                 type: "bar",
+
 
                 data: {
 
                     labels: [
+
                         "Income",
+
                         "Expenses"
+
                     ],
 
+
                     datasets: [
+
                         {
-                            label: "Amount",
+
+                            label:
+                                "Amount",
+
 
                             data: [
+
                                 income,
+
                                 expense
+
                             ],
+
 
                             backgroundColor: [
+
                                 "#16a34a",
+
                                 "#dc2626"
+
                             ],
 
-                            borderRadius: 8,
 
-                            borderSkipped: false
+                            borderRadius:
+                                8,
+
+
+                            borderSkipped:
+                                false
+
                         }
+
                     ]
+
                 },
+
 
                 options: {
 
-                    responsive: true,
+                    responsive:
+                        true,
 
-                    maintainAspectRatio: false,
+
+                    maintainAspectRatio:
+                        false,
+
 
                     plugins: {
 
                         legend: {
-                            display: false
+
+                            display:
+                                false
+
                         },
+
 
                         tooltip: {
 
                             callbacks: {
 
-                                label: context =>
-                                    formatMoney(
-                                        context.raw
-                                    )
+                                label:
+                                    context =>
+                                        formatMoney(
+                                            context.raw
+                                        )
+
                             }
+
                         }
+
                     },
+
 
                     scales: {
 
                         y: {
 
-                            beginAtZero: true,
+                            beginAtZero:
+                                true,
+
 
                             ticks: {
 
-                                callback: value =>
-                                    formatMoney(
-                                        value
-                                    )
+                                callback:
+                                    value =>
+                                        formatMoney(
+                                            value
+                                        )
+
                             }
+
                         }
+
                     }
+
                 }
+
             }
         );
 }
+
 
 /* =========================================================
    BUDGET MODAL
@@ -2002,55 +2790,87 @@ function openBudgetModal() {
             "budgetModal"
         );
 
+
     if (!modal) {
 
         return;
     }
 
+
     const fields = {
 
         budgetBill:
-            budgets["Bill"],
+            budgets[
+                "Bill"
+            ],
 
         budgetEssential:
-            budgets["Essential"],
+            budgets[
+                "Essential"
+            ],
 
         budgetSavings:
-            budgets["Savings"],
+            budgets[
+                "Savings"
+            ],
 
         budgetCreditCard:
-            budgets["Credit Card"],
+            budgets[
+                "Credit Card"
+            ],
 
         budgetNonEssential:
-            budgets["Non-Essential"],
+            budgets[
+                "Non-Essential"
+            ],
 
         budgetExtra:
-            budgets["Extra"]
+            budgets[
+                "Extra"
+            ]
+
     };
 
-    Object.entries(fields)
+
+    Object.entries(
+        fields
+    )
         .forEach(
-            ([id, value]) => {
+            (
+                [
+                    id,
+                    value
+                ]
+            ) => {
 
                 const field =
                     document.getElementById(
                         id
                     );
 
+
                 if (field) {
 
                     field.value =
-                        Number(value) > 0
+                        Number(
+                            value
+                        ) > 0
+
                             ? value
+
                             : "";
+
                 }
+
             }
         );
+
 
     modal.classList.add(
         "show"
     );
 }
+
 
 function closeBudgetModal() {
 
@@ -2058,6 +2878,7 @@ function closeBudgetModal() {
         document.getElementById(
             "budgetModal"
         );
+
 
     if (modal) {
 
@@ -2067,13 +2888,17 @@ function closeBudgetModal() {
     }
 }
 
+
 /* =========================================================
    SAVE BUDGETS
 ========================================================= */
 
-async function saveBudgets(event) {
+async function saveBudgets(
+    event
+) {
 
     event.preventDefault();
+
 
     const newBudgets = {
 
@@ -2106,92 +2931,98 @@ async function saveBudgets(event) {
             getNumberValue(
                 "budgetExtra"
             )
+
     };
 
-    /*
-     * Validate values.
-     */
-    for (
-        const [category, amount]
-        of Object.entries(newBudgets)
-    ) {
-
-        if (
-            !Number.isFinite(amount) ||
-            amount < 0
-        ) {
-
-            showToast(
-                `Invalid budget for ${category}.`
-            );
-
-            return;
-        }
-    }
 
     const submitButton =
         event.target.querySelector(
             'button[type="submit"]'
         );
 
+
     if (submitButton) {
 
-        submitButton.disabled = true;
+        submitButton.disabled =
+            true;
+
 
         submitButton.dataset.originalText =
             submitButton.textContent;
 
+
         submitButton.textContent =
             "Saving...";
     }
+
 
     try {
 
         /*
          * LOCAL MODE
          */
+
         if (!supabaseClient) {
 
             budgets = {
                 ...newBudgets
             };
 
+
             saveLocalBudgets();
+
 
             renderBudgets();
 
+
             closeBudgetModal();
+
 
             showToast(
                 "Budgets saved locally."
             );
 
+
             return;
         }
+
 
         /*
          * SUPABASE MODE
          */
+
         const rows =
             Object.entries(
                 newBudgets
             ).map(
-                ([category, amount]) => ({
+                (
+                    [
+                        category,
+                        amount
+                    ]
+                ) => ({
+
                     category,
+
                     amount
+
                 })
             );
 
+
         const {
             error
-        } = await supabaseClient
-            .from("budgets")
-            .upsert(
-                rows,
-                {
-                    onConflict: "category"
-                }
-            );
+        } =
+            await supabaseClient
+                .from("budgets")
+                .upsert(
+                    rows,
+                    {
+                        onConflict:
+                            "category"
+                    }
+                );
+
 
         if (error) {
 
@@ -2200,23 +3031,30 @@ async function saveBudgets(event) {
                 error
             );
 
+
             showToast(
                 error.message ||
                 "Failed to save budgets."
             );
 
+
             return;
         }
+
 
         budgets = {
             ...newBudgets
         };
 
+
         saveLocalBudgets();
+
 
         renderBudgets();
 
+
         closeBudgetModal();
+
 
         showToast(
             "Budgets saved!"
@@ -2229,6 +3067,7 @@ async function saveBudgets(event) {
             error
         );
 
+
         showToast(
             "Something went wrong."
         );
@@ -2237,7 +3076,9 @@ async function saveBudgets(event) {
 
         if (submitButton) {
 
-            submitButton.disabled = false;
+            submitButton.disabled =
+                false;
+
 
             submitButton.textContent =
                 submitButton.dataset.originalText ||
@@ -2245,6 +3086,7 @@ async function saveBudgets(event) {
         }
     }
 }
+
 
 /* =========================================================
    TRANSACTION MODAL
@@ -2257,26 +3099,34 @@ function openTransactionModal() {
             "transactionModal"
         );
 
+
     if (!modal) {
 
         return;
     }
 
+
     modal.classList.add(
         "show"
     );
+
 
     const dateInput =
         document.getElementById(
             "transactionDate"
         );
 
-    if (dateInput && !dateInput.value) {
+
+    if (
+        dateInput &&
+        !dateInput.value
+    ) {
 
         dateInput.value =
             getLocalDate();
     }
 }
+
 
 function closeTransactionModal() {
 
@@ -2285,6 +3135,7 @@ function closeTransactionModal() {
             "transactionModal"
         );
 
+
     if (modal) {
 
         modal.classList.remove(
@@ -2292,6 +3143,7 @@ function closeTransactionModal() {
         );
     }
 }
+
 
 /* =========================================================
    FILTERS
@@ -2304,52 +3156,96 @@ function clearTransactionFilters() {
             "searchInput"
         );
 
+
     const type =
         document.getElementById(
             "filterType"
         );
+
 
     const category =
         document.getElementById(
             "filterCategory"
         );
 
+
+    const account =
+        document.getElementById(
+            "filterAccount"
+        );
+
+
     const dateFrom =
         document.getElementById(
             "filterDateFrom"
         );
+
 
     const dateTo =
         document.getElementById(
             "filterDateTo"
         );
 
+
     if (search) {
-        search.value = "";
+
+        search.value =
+            "";
     }
+
 
     if (type) {
-        type.value = "all";
+
+        type.value =
+            "all";
     }
+
 
     if (category) {
-        category.value = "all";
+
+        category.value =
+            "all";
     }
+
+
+    if (account) {
+
+        account.value =
+            "all";
+    }
+
 
     if (dateFrom) {
-        dateFrom.value = "";
+
+        dateFrom.value =
+            "";
     }
+
 
     if (dateTo) {
-        dateTo.value = "";
+
+        dateTo.value =
+            "";
     }
 
+
     renderTransactions();
+
 
     showToast(
         "Filters cleared."
     );
 }
+
+
+/*
+ * Backwards-compatible alias.
+ */
+function clearFilters() {
+
+    clearTransactionFilters();
+}
+
 
 /* =========================================================
    REFRESH
@@ -2361,30 +3257,41 @@ async function refreshData() {
 
         loadLocalData();
 
+
         render();
+
 
         showToast(
             "Local data refreshed."
         );
 
+
         return;
     }
+
 
     showToast(
         "Refreshing..."
     );
 
+
     await Promise.all([
+
         loadTransactions(),
+
         loadBudgets()
+
     ]);
 
+
     render();
+
 
     showToast(
         "Data refreshed."
     );
 }
+
 
 /* =========================================================
    EXCEL EXPORT
@@ -2401,8 +3308,10 @@ function exportExcel() {
             "Excel library is not loaded."
         );
 
+
         return;
     }
+
 
     const data =
         transactions.map(
@@ -2418,8 +3327,11 @@ function exportExcel() {
                     t.category,
 
                 Type:
-                    t.type === "income"
+                    t.type ===
+                    "income"
+
                         ? "Income"
+
                         : "Expense",
 
                 Amount:
@@ -2431,17 +3343,22 @@ function exportExcel() {
                     t.account,
 
                 Notes:
-                    t.notes || ""
+                    t.notes ||
+                    ""
+
             })
         );
+
 
     const worksheet =
         XLSX.utils.json_to_sheet(
             data
         );
 
+
     const workbook =
         XLSX.utils.book_new();
+
 
     XLSX.utils.book_append_sheet(
         workbook,
@@ -2449,15 +3366,18 @@ function exportExcel() {
         "Transactions"
     );
 
+
     XLSX.writeFile(
         workbook,
         "budget-transactions.xlsx"
     );
 
+
     showToast(
         "Excel file exported!"
     );
 }
+
 
 /* =========================================================
    PDF EXPORT
@@ -2475,18 +3395,24 @@ function exportPDF() {
             "PDF library is not loaded."
         );
 
+
         return;
     }
 
+
     const {
         jsPDF
-    } = window.jspdf;
+    } =
+        window.jspdf;
+
 
     const doc =
         new jsPDF();
 
+
     const data =
         getPeriodTransactions();
+
 
     const income =
         sumTransactions(
@@ -2494,16 +3420,23 @@ function exportPDF() {
             "income"
         );
 
+
     const expense =
         sumTransactions(
             data,
             "expense"
         );
 
-    const balance =
-        income - expense;
 
-    doc.setFontSize(20);
+    const balance =
+        income -
+        expense;
+
+
+    doc.setFontSize(
+        20
+    );
+
 
     doc.text(
         "Budget Tracker Report",
@@ -2511,7 +3444,11 @@ function exportPDF() {
         20
     );
 
-    doc.setFontSize(11);
+
+    doc.setFontSize(
+        11
+    );
+
 
     doc.text(
         `Period: ${currentPeriod.toUpperCase()}`,
@@ -2519,23 +3456,33 @@ function exportPDF() {
         29
     );
 
+
     doc.text(
-        `Income: ${formatMoney(income)}`,
+        `Income: ${formatMoney(
+            income
+        )}`,
         14,
         38
     );
 
+
     doc.text(
-        `Expenses: ${formatMoney(expense)}`,
+        `Expenses: ${formatMoney(
+            expense
+        )}`,
         14,
         45
     );
 
+
     doc.text(
-        `Balance: ${formatMoney(balance)}`,
+        `Balance: ${formatMoney(
+            balance
+        )}`,
         14,
         52
     );
+
 
     const rows =
         data.map(
@@ -2545,14 +3492,19 @@ function exportPDF() {
 
                 t.description,
 
-                t.category || "—",
+                t.category ||
+                    "—",
 
-                t.type === "income"
+                t.type ===
+                    "income"
+
                     ? "Income"
+
                     : "Expense",
 
                 `PHP ${Number(
-                    t.amount || 0
+                    t.amount ||
+                    0
                 ).toLocaleString(
                     "en-PH",
                     {
@@ -2561,9 +3513,12 @@ function exportPDF() {
                     }
                 )}`,
 
-                t.account || "—"
+                t.account ||
+                    "—"
+
             ]
         );
+
 
     if (
         typeof doc.autoTable ===
@@ -2572,86 +3527,125 @@ function exportPDF() {
 
         doc.autoTable({
 
-            startY: 62,
+            startY:
+                62,
 
             head: [[
+
                 "Date",
+
                 "Description",
+
                 "Category",
+
                 "Type",
+
                 "Amount",
+
                 "Account"
+
             ]],
 
-            body: rows,
+            body:
+                rows,
 
             styles: {
-                fontSize: 8
+
+                fontSize:
+                    8
+
             },
 
             headStyles: {
+
                 fillColor: [
+
                     37,
+
                     99,
+
                     235
+
                 ]
+
             },
 
             alternateRowStyles: {
+
                 fillColor: [
+
                     245,
+
                     247,
+
                     250
+
                 ]
+
             }
+
         });
 
     } else {
 
-        /*
-         * Still generate a PDF if AutoTable
-         * isn't loaded.
-         */
-        let y = 65;
+        let y =
+            65;
 
-        doc.setFontSize(9);
 
-        data.forEach(t => {
+        doc.setFontSize(
+            9
+        );
 
-            const line =
-                `${t.date} | ${t.description} | ${t.category || "—"} | ${formatMoney(t.amount)}`;
 
-            doc.text(
-                line.substring(
-                    0,
-                    110
-                ),
-                14,
-                y
-            );
+        data.forEach(
+            t => {
 
-            y += 6;
+                const line =
+                    `${t.date} | ${t.description} | ${t.category || "—"} | ${formatMoney(t.amount)}`;
 
-            if (y > 280) {
 
-                doc.addPage();
+                doc.text(
+                    line.substring(
+                        0,
+                        110
+                    ),
+                    14,
+                    y
+                );
 
-                y = 20;
+
+                y += 6;
+
+
+                if (
+                    y > 280
+                ) {
+
+                    doc.addPage();
+
+
+                    y =
+                        20;
+                }
+
             }
-        });
+        );
     }
+
 
     doc.save(
         "budget-report.pdf"
     );
+
 
     showToast(
         "PDF file exported!"
     );
 }
 
+
 /* =========================================================
-   HELPER: SUM TRANSACTIONS
+   HELPERS
 ========================================================= */
 
 function sumTransactions(
@@ -2662,19 +3656,23 @@ function sumTransactions(
     return data
         .filter(
             t =>
-                t.type === type
+                t.type ===
+                type
         )
         .reduce(
-            (sum, t) =>
+            (
+                sum,
+                t
+            ) =>
                 sum +
-                Number(t.amount || 0),
+                Number(
+                    t.amount ||
+                    0
+                ),
             0
         );
 }
 
-/* =========================================================
-   HELPER: SET TEXT
-========================================================= */
 
 function setText(
     id,
@@ -2682,7 +3680,10 @@ function setText(
 ) {
 
     const element =
-        document.getElementById(id);
+        document.getElementById(
+            id
+        );
+
 
     if (element) {
 
@@ -2691,74 +3692,103 @@ function setText(
     }
 }
 
-/* =========================================================
-   HELPER: NUMBER
-========================================================= */
 
-function getNumberValue(id) {
+function getNumberValue(
+    id
+) {
 
     const element =
-        document.getElementById(id);
+        document.getElementById(
+            id
+        );
+
 
     if (!element) {
 
         return 0;
     }
 
+
     const value =
         Number(
             element.value
         );
 
+
     if (
-        !Number.isFinite(value) ||
+        !Number.isFinite(
+            value
+        ) ||
         value < 0
     ) {
 
         return 0;
     }
 
+
     return value;
 }
 
+
 /* =========================================================
-   HELPER: MONEY
+   MONEY
 ========================================================= */
 
-function formatMoney(amount) {
+function formatMoney(
+    amount
+) {
 
     const value =
-        Number(amount);
+        Number(
+            amount
+        );
+
 
     return (
-        Number.isFinite(value)
+
+        Number.isFinite(
+            value
+        )
             ? value
             : 0
+
     ).toLocaleString(
         "en-PH",
         {
-            style: "currency",
-            currency: "PHP",
-            minimumFractionDigits: 2
+
+            style:
+                "currency",
+
+            currency:
+                "PHP",
+
+            minimumFractionDigits:
+                2
+
         }
     );
 }
 
+
 /* =========================================================
-   HELPER: DATE
+   DATE
 ========================================================= */
 
-function formatDate(dateString) {
+function formatDate(
+    dateString
+) {
 
     if (!dateString) {
 
         return "";
     }
 
+
     const date =
         new Date(
             `${dateString}T00:00:00`
         );
+
 
     if (
         Number.isNaN(
@@ -2771,27 +3801,34 @@ function formatDate(dateString) {
         );
     }
 
+
     return date.toLocaleDateString(
         "en-PH",
         {
-            year: "numeric",
-            month: "short",
-            day: "numeric"
+
+            year:
+                "numeric",
+
+            month:
+                "short",
+
+            day:
+                "numeric"
+
         }
     );
 }
 
-/* =========================================================
-   HELPER: LOCAL DATE
-========================================================= */
 
 function getLocalDate() {
 
     const date =
         new Date();
 
+
     const year =
         date.getFullYear();
+
 
     const month =
         String(
@@ -2801,6 +3838,7 @@ function getLocalDate() {
             "0"
         );
 
+
     const day =
         String(
             date.getDate()
@@ -2809,11 +3847,13 @@ function getLocalDate() {
             "0"
         );
 
+
     return `${year}-${month}-${day}`;
 }
 
+
 /* =========================================================
-   SET DEFAULT DATES
+   DEFAULT DATES
 ========================================================= */
 
 function setDefaultDates() {
@@ -2821,15 +3861,18 @@ function setDefaultDates() {
     const today =
         getLocalDate();
 
+
     const periodDate =
         document.getElementById(
             "periodDate"
         );
 
+
     const transactionDate =
         document.getElementById(
             "transactionDate"
         );
+
 
     if (
         periodDate &&
@@ -2839,6 +3882,7 @@ function setDefaultDates() {
         periodDate.value =
             today;
     }
+
 
     if (
         transactionDate &&
@@ -2850,16 +3894,20 @@ function setDefaultDates() {
     }
 }
 
+
 /* =========================================================
-   HELPER: TOAST
+   TOAST
 ========================================================= */
 
-function showToast(message) {
+function showToast(
+    message
+) {
 
     const toast =
         document.getElementById(
             "toast"
         );
+
 
     if (!toast) {
 
@@ -2867,15 +3915,21 @@ function showToast(message) {
             message
         );
 
+
         return;
     }
 
+
     toast.textContent =
-        String(message);
+        String(
+            message
+        );
+
 
     toast.classList.add(
         "show"
     );
+
 
     if (toastTimer) {
 
@@ -2883,6 +3937,7 @@ function showToast(message) {
             toastTimer
         );
     }
+
 
     toastTimer =
         setTimeout(
@@ -2897,14 +3952,18 @@ function showToast(message) {
         );
 }
 
+
 /* =========================================================
-   HELPER: ESCAPE HTML
+   ESCAPE HTML
 ========================================================= */
 
-function escapeHTML(value) {
+function escapeHTML(
+    value
+) {
 
     return String(
-        value ?? ""
+        value ??
+        ""
     )
         .replace(
             /&/g,
@@ -2928,117 +3987,83 @@ function escapeHTML(value) {
         );
 }
 
-/* =========================================================
-   CLOSE MODALS WHEN CLICKING BACKDROP
-========================================================= */
-
-window.addEventListener(
-    "click",
-    event => {
-
-        const transactionModal =
-            document.getElementById(
-                "transactionModal"
-            );
-
-        const budgetModal =
-            document.getElementById(
-                "budgetModal"
-            );
-
-        if (
-            transactionModal &&
-            event.target ===
-                transactionModal
-        ) {
-
-            closeTransactionModal();
-        }
-
-        if (
-            budgetModal &&
-            event.target ===
-                budgetModal
-        ) {
-
-            closeBudgetModal();
-        }
-    }
-);
-
-/* =========================================================
-   ESCAPE KEY
-========================================================= */
-
-window.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.key ===
-            "Escape"
-        ) {
-
-            closeTransactionModal();
-
-            closeBudgetModal();
-        }
-    }
-);
 
 /* =========================================================
    NAVIGATION
 ========================================================= */
 
-function scrollToSection(id) {
+function scrollToSection(
+    id
+) {
 
     const section =
         document.getElementById(
             id
         );
 
+
     if (section) {
 
         section.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
+
+            behavior:
+                "smooth",
+
+            block:
+                "start"
+
         });
     }
 }
 
+
 /* =========================================================
-   OPTIONAL GLOBAL API
+   GLOBAL FUNCTIONS
 ========================================================= */
 
 window.openTransactionModal =
     openTransactionModal;
 
+
 window.closeTransactionModal =
     closeTransactionModal;
+
 
 window.openBudgetModal =
     openBudgetModal;
 
+
 window.closeBudgetModal =
     closeBudgetModal;
+
 
 window.deleteTransaction =
     deleteTransaction;
 
+
 window.sortTransactions =
     sortTransactions;
+
 
 window.exportExcel =
     exportExcel;
 
+
 window.exportPDF =
     exportPDF;
+
 
 window.scrollToSection =
     scrollToSection;
 
+
 window.clearTransactionFilters =
     clearTransactionFilters;
+
+
+window.clearFilters =
+    clearFilters;
+
 
 window.refreshData =
     refreshData;

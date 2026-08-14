@@ -18,19 +18,12 @@
     <title>My Budget Tracker</title>
 
 
-    <!-- =====================================================
-         CSS
-    ====================================================== -->
-
+    <!-- CSS -->
     <link
         rel="stylesheet"
         href="./style.css"
     >
 
-
-    <!-- =====================================================
-         EXTERNAL LIBRARIES
-    ====================================================== -->
 
     <!-- SheetJS - Excel Export -->
     <script
@@ -59,32 +52,31 @@
         defer
     ></script>
 
+
     <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+        defer
+    ></script>
+
 
     <!-- Your JavaScript -->
-    <script src="./script.js"></script>
+    <script
+        src="./script.js"
+        defer
+    ></script>
 
 </head>
 
 
 <body>
 
-
-<!-- =========================================================
-     APP
-========================================================= -->
-
 <div class="app">
 
 
-    <!-- =====================================================
-         SIDEBAR
-    ====================================================== -->
+    <!-- SIDEBAR -->
 
     <aside class="sidebar">
-
-        <!-- LOGO -->
 
         <div class="logo">
 
@@ -99,8 +91,6 @@
         </div>
 
 
-        <!-- NAVIGATION -->
-
         <nav class="nav">
 
             <button
@@ -108,13 +98,8 @@
                 class="nav-item active"
                 onclick="scrollToSection('dashboard')"
             >
-
                 <span>📊</span>
-
-                <span>
-                    Dashboard
-                </span>
-
+                <span>Dashboard</span>
             </button>
 
 
@@ -123,13 +108,8 @@
                 class="nav-item"
                 onclick="openTransactionModal()"
             >
-
                 <span>➕</span>
-
-                <span>
-                    Add Transaction
-                </span>
-
+                <span>Add Transaction</span>
             </button>
 
 
@@ -138,13 +118,8 @@
                 class="nav-item"
                 onclick="openBudgetModal()"
             >
-
                 <span>🎯</span>
-
-                <span>
-                    Budgets
-                </span>
-
+                <span>Budgets</span>
             </button>
 
 
@@ -153,13 +128,8 @@
                 class="nav-item"
                 onclick="scrollToSection('transactions')"
             >
-
                 <span>💳</span>
-
-                <span>
-                    Transactions
-                </span>
-
+                <span>Transactions</span>
             </button>
 
         </nav>
@@ -181,7 +151,7 @@
                 </strong>
 
                 <small id="databaseStatus">
-                    Local Storage
+                    Connecting...
                 </small>
 
             </div>
@@ -192,16 +162,12 @@
 
 
 
-    <!-- =====================================================
-         MAIN CONTENT
-    ====================================================== -->
+    <!-- MAIN -->
 
     <main class="main">
 
 
-        <!-- =================================================
-             TOP BAR
-        ================================================== -->
+        <!-- TOP BAR -->
 
         <header class="topbar">
 
@@ -226,11 +192,8 @@
                     class="btn-primary"
                     onclick="openTransactionModal()"
                 >
-
                     <span>➕</span>
-
                     Add Transaction
-
                 </button>
 
             </div>
@@ -239,9 +202,7 @@
 
 
 
-        <!-- =================================================
-             DASHBOARD
-        ================================================== -->
+        <!-- DASHBOARD -->
 
         <section
             id="dashboard"
@@ -249,7 +210,7 @@
         >
 
 
-            <!-- PERIOD SELECTOR -->
+            <!-- PERIOD -->
 
             <div class="period-bar">
 
@@ -303,14 +264,10 @@
 
 
 
-            <!-- =================================================
-                 SUMMARY CARDS
-            ================================================== -->
+            <!-- SUMMARY -->
 
             <div class="summary-grid">
 
-
-                <!-- BALANCE -->
 
                 <div class="summary-card">
 
@@ -332,9 +289,6 @@
                 </div>
 
 
-
-                <!-- INCOME -->
-
                 <div class="summary-card income">
 
                     <div class="summary-label">
@@ -355,9 +309,6 @@
                 </div>
 
 
-
-                <!-- EXPENSE -->
-
                 <div class="summary-card expense">
 
                     <div class="summary-label">
@@ -377,9 +328,6 @@
 
                 </div>
 
-
-
-                <!-- SAVINGS -->
 
                 <div class="summary-card savings">
 
@@ -404,14 +352,10 @@
 
 
 
-            <!-- =================================================
-                 CHART + CATEGORY BREAKDOWN
-            ================================================== -->
+            <!-- CHARTS -->
 
             <div class="content-grid">
 
-
-                <!-- INCOME VS EXPENSE CHART -->
 
                 <div class="card">
 
@@ -444,8 +388,6 @@
                 </div>
 
 
-
-                <!-- CATEGORY BREAKDOWN -->
 
                 <div class="card">
 
@@ -483,9 +425,7 @@
 
 
 
-            <!-- =================================================
-                 BUDGETS
-            ================================================== -->
+            <!-- BUDGETS -->
 
             <section
                 id="budgetSection"
@@ -512,10 +452,8 @@
                         class="btn-primary"
                         onclick="openBudgetModal()"
                     >
-
                         ⚙️
                         Manage Budgets
-
                     </button>
 
                 </div>
@@ -539,17 +477,13 @@
 
 
 
-        <!-- =====================================================
-             TRANSACTIONS
-        ====================================================== -->
+        <!-- TRANSACTIONS -->
 
         <section
             id="transactions"
             class="card transactions-card"
         >
 
-
-            <!-- HEADER -->
 
             <div class="card-header">
 
@@ -567,8 +501,6 @@
                 </div>
 
 
-                <!-- EXPORT BUTTONS -->
-
                 <div class="export-buttons">
 
                     <button
@@ -576,10 +508,8 @@
                         class="btn-green"
                         onclick="exportExcel()"
                     >
-
                         📊
                         Excel
-
                     </button>
 
 
@@ -588,10 +518,8 @@
                         class="btn-red"
                         onclick="exportPDF()"
                     >
-
                         📄
                         PDF
-
                     </button>
 
                 </div>
@@ -600,14 +528,10 @@
 
 
 
-            <!-- =================================================
-                 FILTERS
-            ================================================== -->
+            <!-- FILTERS -->
 
             <div class="filters">
 
-
-                <!-- SEARCH -->
 
                 <div class="filter-group search-filter">
 
@@ -627,9 +551,6 @@
 
                 </div>
 
-
-
-                <!-- TYPE -->
 
                 <div class="filter-group">
 
@@ -658,9 +579,6 @@
 
                 </div>
 
-
-
-                <!-- CATEGORY -->
 
                 <div class="filter-group">
 
@@ -706,9 +624,6 @@
                 </div>
 
 
-
-                <!-- ACCOUNT -->
-
                 <div class="filter-group">
 
                     <label
@@ -753,9 +668,6 @@
                 </div>
 
 
-
-                <!-- FROM -->
-
                 <div class="filter-group">
 
                     <label
@@ -773,9 +685,6 @@
 
                 </div>
 
-
-
-                <!-- TO -->
 
                 <div class="filter-group">
 
@@ -795,27 +704,20 @@
                 </div>
 
 
-
-                <!-- CLEAR FILTERS -->
-
                 <button
                     type="button"
                     class="btn-gray"
-                    onclick="clearFilters()"
+                    onclick="clearTransactionFilters()"
                 >
-
                     ✕
                     Clear
-
                 </button>
 
             </div>
 
 
 
-            <!-- =================================================
-                 TRANSACTION TABLE
-            ================================================== -->
+            <!-- TABLE -->
 
             <div class="table-wrapper">
 
@@ -832,9 +734,7 @@
                                     onclick="sortTransactions('date')"
                                     class="btn-gray table-sort"
                                 >
-
                                     Date ↕️
-
                                 </button>
 
                             </th>
@@ -862,9 +762,7 @@
                                     onclick="sortTransactions('amount')"
                                     class="btn-gray table-sort"
                                 >
-
                                     Amount ↕️
-
                                 </button>
 
                             </th>
@@ -892,9 +790,7 @@
                                 colspan="7"
                                 class="loading-cell"
                             >
-
                                 Loading transactions...
-
                             </td>
 
                         </tr>
@@ -915,9 +811,7 @@
 
 
 
-<!-- =========================================================
-     ADD TRANSACTION MODAL
-========================================================= -->
+<!-- TRANSACTION MODAL -->
 
 <div
     class="modal"
@@ -927,11 +821,7 @@
     aria-labelledby="transactionModalTitle"
 >
 
-
     <div class="modal-content">
-
-
-        <!-- HEADER -->
 
         <div class="modal-header">
 
@@ -960,23 +850,16 @@
         </div>
 
 
-
-        <!-- FORM -->
-
         <form id="transactionForm">
-
 
             <div class="form-grid">
 
-
-                <!-- TYPE -->
 
                 <div class="form-group">
 
                     <label for="transactionType">
                         Transaction Type
                     </label>
-
 
                     <select
                         id="transactionType"
@@ -996,15 +879,11 @@
                 </div>
 
 
-
-                <!-- AMOUNT -->
-
                 <div class="form-group">
 
                     <label for="amount">
                         Amount
                     </label>
-
 
                     <input
                         type="number"
@@ -1019,15 +898,11 @@
                 </div>
 
 
-
-                <!-- DATE -->
-
                 <div class="form-group">
 
                     <label for="transactionDate">
                         Date
                     </label>
-
 
                     <input
                         type="date"
@@ -1038,15 +913,11 @@
                 </div>
 
 
-
-                <!-- CATEGORY -->
-
                 <div class="form-group">
 
                     <label for="category">
                         Category
                     </label>
-
 
                     <select
                         id="category"
@@ -1082,15 +953,11 @@
                 </div>
 
 
-
-                <!-- ACCOUNT -->
-
                 <div class="form-group">
 
                     <label for="account">
                         Account / Wallet
                     </label>
-
 
                     <select
                         id="account"
@@ -1126,15 +993,11 @@
                 </div>
 
 
-
-                <!-- DESCRIPTION -->
-
                 <div class="form-group">
 
                     <label for="description">
                         Description
                     </label>
-
 
                     <input
                         type="text"
@@ -1147,15 +1010,11 @@
                 </div>
 
 
-
-                <!-- NOTES -->
-
                 <div class="form-group full">
 
                     <label for="notes">
                         Notes
                     </label>
-
 
                     <textarea
                         id="notes"
@@ -1166,12 +1025,8 @@
 
                 </div>
 
-
             </div>
 
-
-
-            <!-- ACTIONS -->
 
             <div class="modal-actions">
 
@@ -1193,9 +1048,7 @@
 
             </div>
 
-
         </form>
-
 
     </div>
 
@@ -1203,9 +1056,7 @@
 
 
 
-<!-- =========================================================
-     BUDGET MODAL
-========================================================= -->
+<!-- BUDGET MODAL -->
 
 <div
     class="modal"
@@ -1215,11 +1066,7 @@
     aria-labelledby="budgetModalTitle"
 >
 
-
     <div class="modal-content">
-
-
-        <!-- HEADER -->
 
         <div class="modal-header">
 
@@ -1248,23 +1095,16 @@
         </div>
 
 
-
-        <!-- FORM -->
-
         <form id="budgetForm">
-
 
             <div class="form-grid">
 
-
-                <!-- BILL -->
 
                 <div class="form-group">
 
                     <label for="budgetBill">
                         Bill Budget
                     </label>
-
 
                     <input
                         type="number"
@@ -1278,15 +1118,11 @@
                 </div>
 
 
-
-                <!-- ESSENTIAL -->
-
                 <div class="form-group">
 
                     <label for="budgetEssential">
                         Essential Budget
                     </label>
-
 
                     <input
                         type="number"
@@ -1300,15 +1136,11 @@
                 </div>
 
 
-
-                <!-- SAVINGS -->
-
                 <div class="form-group">
 
                     <label for="budgetSavings">
                         Savings Goal
                     </label>
-
 
                     <input
                         type="number"
@@ -1322,15 +1154,11 @@
                 </div>
 
 
-
-                <!-- CREDIT CARD -->
-
                 <div class="form-group">
 
                     <label for="budgetCreditCard">
                         Credit Card Budget
                     </label>
-
 
                     <input
                         type="number"
@@ -1344,15 +1172,11 @@
                 </div>
 
 
-
-                <!-- NON ESSENTIAL -->
-
                 <div class="form-group">
 
                     <label for="budgetNonEssential">
                         Non-Essential Budget
                     </label>
-
 
                     <input
                         type="number"
@@ -1366,15 +1190,11 @@
                 </div>
 
 
-
-                <!-- EXTRA -->
-
                 <div class="form-group">
 
                     <label for="budgetExtra">
                         Extra Budget
                     </label>
-
 
                     <input
                         type="number"
@@ -1387,12 +1207,8 @@
 
                 </div>
 
-
             </div>
 
-
-
-            <!-- ACTIONS -->
 
             <div class="modal-actions">
 
@@ -1414,9 +1230,7 @@
 
             </div>
 
-
         </form>
-
 
     </div>
 
@@ -1424,9 +1238,7 @@
 
 
 
-<!-- =========================================================
-     TOAST
-========================================================= -->
+<!-- TOAST -->
 
 <div
     class="toast"
@@ -1434,17 +1246,6 @@
     role="status"
     aria-live="polite"
 ></div>
-
-
-
-<!-- =========================================================
-     JAVASCRIPT
-========================================================= -->
-
-<script
-    src="./script.js"
-    defer
-></script>
 
 
 </body>
