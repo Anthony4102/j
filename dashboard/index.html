@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Atlas personal daily assistant dashboard."
+    >
+
+    <title>Atlas — Dashboard</title>
+
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="dashboard.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase.js"></script>
+    <script src="./dashboard.js" defer></script>
+</head>
+<body>
+<div class="atlas-shell">
+<aside class="atlas-sidebar">
+  <div class="atlas-brand"><div class="atlas-brand-icon">◈</div><span>ATLAS</span></div>
+  <nav class="atlas-nav">
+    <a class="active" href="./">🏠 <span>Dashboard</span></a>
+    <a href="../tools/budget-tracker/">💰 <span>Budget</span></a>
+    <a href="#tasks">✅ <span>Tasks</span></a>
+    <a href="#notes">📝 <span>Notes</span></a>
+    <a href="#habits">🎯 <span>Habits</span></a>
+    <a href="#goals">🏆 <span>Goals</span></a>
+    <a href="#calendar">📅 <span>Calendar</span></a>
+    <div class="atlas-divider"></div>
+    <a href="../atlas/">🤖 <span>Ask Atlas</span></a>
+    <a href="#settings">⚙️ <span>Settings</span></a>
+  </nav>
+</aside>
+<main class="atlas-main">
+  <header class="atlas-topbar">
+    <div>
+      <div class="atlas-eyebrow">Personal command center</div>
+      <h1 class="atlas-title" id="greeting">Good evening 👋</h1>
+      <p class="atlas-subtitle">Here's your quick glance for today.</p>
+    </div>
+    <div class="atlas-date" id="today"></div>
+  </header>
+
+  <section class="atlas-grid" aria-label="Daily summary">
+    <article class="atlas-card"><div class="atlas-card-label">Current Balance</div><div class="atlas-card-value" id="balance">₱0.00</div><div class="atlas-card-meta">From your Budget Tracker</div></article>
+    <article class="atlas-card"><div class="atlas-card-label">Today's Income</div><div class="atlas-card-value" id="income">₱0.00</div><div class="atlas-card-meta">Money coming in today</div></article>
+    <article class="atlas-card"><div class="atlas-card-label">Today's Expenses</div><div class="atlas-card-value" id="expense">₱0.00</div><div class="atlas-card-meta">Money going out today</div></article>
+    <article class="atlas-card"><div class="atlas-card-label">Tasks Today</div><div class="atlas-card-value">0</div><div class="atlas-card-meta">Tasks tool coming next</div></article>
+  </section>
+
+  <section class="atlas-section">
+    <div class="atlas-section-title"><h2>Your tools</h2><a class="atlas-link" href="../tools/budget-tracker/">Open Budget →</a></div>
+    <div class="atlas-tool-grid">
+      <article class="atlas-card atlas-tool">
+        <div class="atlas-tool-icon">💰</div><h3>Budget Tracker</h3>
+        <p>Track income, expenses, budgets, savings and financial activity.</p>
+        <a class="atlas-tool-action" href="../tools/budget-tracker/">Open Budget Tracker →</a>
+      </article>
+      <article class="atlas-card atlas-tool" id="tasks">
+        <div class="atlas-tool-icon">✅</div><h3>Tasks & Habits</h3>
+        <p>Plan today's priorities and build routines. This will become the next Atlas module.</p>
+        <span class="atlas-tool-action">Coming next</span>
+      </article>
+      <article class="atlas-card atlas-tool" id="notes">
+        <div class="atlas-tool-icon">📝</div><h3>Notes</h3>
+        <p>Keep a quick scratchpad for thoughts, links and information you want Atlas to remember.</p>
+        <span class="atlas-tool-action">Coming next</span>
+      </article>
+      <article class="atlas-card atlas-tool" id="goals">
+        <div class="atlas-tool-icon">🎯</div><h3>Goals</h3>
+        <p>Track personal projects and long-term goals in one place.</p>
+        <span class="atlas-tool-action">Coming next</span>
+      </article>
+      <article class="atlas-card atlas-tool" id="calendar">
+        <div class="atlas-tool-icon">📅</div><h3>Calendar</h3>
+        <p>Bring your upcoming events and deadlines into the same daily view.</p>
+        <span class="atlas-tool-action">Coming next</span>
+      </article>
+      <article class="atlas-card atlas-tool">
+        <div class="atlas-tool-icon">🤖</div><h3>Atlas Assistant</h3>
+        <p>Ask Atlas questions and eventually let it operate your tools using natural language.</p>
+        <a class="atlas-tool-action" href="../atlas/">Open Atlas →</a>
+      </article>
+    </div>
+  </section>
+
+  <section class="atlas-command">
+    <input id="commandInput" type="text" placeholder="Ask Atlas or enter a quick command…" aria-label="Ask Atlas">
+    <button id="commandButton" type="button">Ask Atlas</button>
+  </section>
+  <p class="atlas-note">Atlas v1: the dashboard is connected to the same Budget Tracker data when available. AI commands will be added after the core tools are organized.</p>
+  <footer class="atlas-footer">Atlas — your personal daily assistant.</footer>
+</main>
+<nav class="atlas-mobile-bar">
+  <a href="./"><span>🏠</span>Home</a>
+  <a href="../tools/budget-tracker/"><span>💰</span>Budget</a>
+  <a href="#tasks"><span>✅</span>Tasks</a>
+  <a href="#notes"><span>📝</span>Notes</a>
+  <a href="../atlas/"><span>🤖</span>Atlas</a>
+</nav>
+</div>
+</body>
+</html>
