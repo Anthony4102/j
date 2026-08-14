@@ -4067,3 +4067,1111 @@ window.clearFilters =
 
 window.refreshData =
     refreshData;
+
+
+/* =========================================================
+   FIX PATCH
+   EDIT / UPDATE / DELETE / MOBILE TRANSACTIONS
+========================================================= */
+
+let editingTransactionId = null;
+
+
+/* =========================================================
+   OPEN TRANSACTION MODAL
+   ADD MODE
+========================================================= */
+
+function openTransactionModal() {
+
+    const modal =
+        document.getElementById("transactionModal");
+
+    if (!modal) {
+        return;
+    }
+
+    // Always open as a NEW transaction.
+    editingTransactionId = null;
+
+    const title =
+        document.getElementById(
+            "transactionModalTitle"
+        );
+
+    if (title) {
+        title.textContent =
+            "Add Transaction";
+    }
+
+    const submitButton =
+        document.querySelector(
+            '#transactionForm button[type="submit"]'
+        );
+
+    if (submitButton) {
+        submitButton.textContent =
+            "💾 Save Transaction";
+    }
+
+    resetTransactionForm();
+
+    modal.classList.add("show");
+
+    const dateInput =
+        document.getElementById(
+            "transactionDate"
+        );
+
+    if (dateInput) {
+        dateInput.value =
+            getLocalDate();
+    }
+}
+
+
+/* =========================================================
+   EDIT TRANSACTION
+========================================================= */
+
+function editTransaction(id) {
+
+    const transaction =
+        transactions.find(
+            t =>
+                String(t.id) ===
+                String(id)
+        );
+
+    if (!transaction) {
+
+        showToast(
+            "Transaction not found."
+        );
+
+        return;
+    }
+
+    editingTransactionId =
+        transaction.id;
+
+
+    const type =
+        document.getElementById(
+            "transactionType"
+        );
+
+    const amount =
+        document.getElementById(
+            "amount"
+        );
+
+    const date =
+        document.getElementById(
+            "transactionDate"
+        );
+
+    const category =
+        document.getElementById(
+            "category"
+        );
+
+    const account =
+        document.getElementById(
+            "account"
+        );
+
+    const description =
+        document.getElementById(
+            "description"
+        );
+
+    const notes =
+        document.getElementById(
+            "notes"
+        );
+
+
+    if (type) {
+        type.value =
+            transaction.type ||
+            "expense";
+    }
+
+    if (amount) {
+        amount.value =
+            transaction.amount ?? "";
+    }
+
+    if (date) {
+        date.value =
+            transaction.date ||
+            getLocalDate();
+    }
+
+    if (category) {
+        category.value =
+            transaction.category ||
+            "";
+    }
+
+    if (account) {
+        account.value =
+            transaction.account ||
+            "";
+    }
+
+    if (description) {
+        description.value =
+            transaction.description ||
+            "";
+    }
+
+    if (notes) {
+        notes.value =
+            transaction.notes ||
+            "";
+    }
+
+
+    const title =
+        document.getElementById(
+            "transactionModalTitle"
+        );
+
+    if (title) {
+        title.textContent =
+            "Edit Transaction";
+    }
+
+
+    const submitButton =
+        document.querySelector(
+            '#transactionForm button[type="submit"]'
+        );
+
+    if (submitButton) {
+        submitButton.textContent =
+            "💾 Update Transaction";
+    }
+
+
+    const modal =
+        document.getElementById(
+            "transactionModal"
+        );
+
+    if (modal) {
+        modal.classList.add("show");
+    }
+}
+
+
+/* =========================================================
+   ADD / UPDATE TRANSACTION
+========================================================= */
+
+async function addTransaction(event) {
+
+    event.preventDefault();
+
+
+    const type =
+        document.getElementById(
+            "transactionType"
+        )?.value ||
+        "expense";
+
+
+    const amount =
+        Number(
+            document.getElementById(
+                "amount"
+            )?.value
+        );
+
+
+    const date =
+        document.getElementById(
+            "transactionDate"
+        )?.value ||
+        getLocalDate();
+
+
+    const category =
+        document.getElementById(
+            "category"
+        )?.value ||
+        "";
+
+
+    const account =
+        document.getElementById(
+            "account"
+        )?.value ||
+        "";
+
+
+    const description =
+        document.getElementById(
+            "description"
+        )?.value
+            .trim() ||
+        "";
+
+
+    const notes =
+        document.getElementById(
+            "notes"
+        )?.value
+            .trim() ||
+        "";
+
+
+    /* VALIDATION */
+
+    if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+    ) {
+
+        showToast(
+            "Please enter a valid amount."
+        );
+
+        return;
+    }
+
+
+    if (!date) {
+
+        showToast(
+            "Please select a date."
+        );
+
+        return;
+    }
+
+
+    if (!description) {
+
+        showToast(
+            "Please enter a description."
+        );
+
+        return;
+    }
+
+
+    if (
+        type === "expense" &&
+        !category
+    ) {
+
+        showToast(
+            "Please select a category."
+        );
+
+        return;
+    }
+
+
+    const submitButton =
+        event.target.querySelector(
+            'button[type="submit"]'
+        );
+
+
+    if (submitButton) {
+
+        submitButton.disabled =
+            true;
+
+        submitButton.dataset.originalText =
+            submitButton.textContent;
+
+        submitButton.textContent =
+            editingTransactionId !== null
+                ? "Updating..."
+                : "Saving...";
+    }
+
+
+    try {
+
+        /* =================================================
+           UPDATE EXISTING TRANSACTION
+        ================================================= */
+
+        if (
+            editingTransactionId !==
+            null
+        ) {
+
+            /*
+             * LOCAL STORAGE
+             */
+
+            if (!supabaseClient) {
+
+                const index =
+                    transactions.findIndex(
+                        t =>
+                            String(t.id) ===
+                            String(
+                                editingTransactionId
+                            )
+                    );
+
+
+                if (index === -1) {
+
+                    showToast(
+                        "Transaction not found."
+                    );
+
+                    return;
+                }
+
+
+                transactions[index] = {
+
+                    ...transactions[index],
+
+                    type,
+
+                    amount,
+
+                    date,
+
+                    category,
+
+                    account,
+
+                    description,
+
+                    notes
+                };
+
+
+                saveLocalData();
+
+                render();
+
+                closeTransactionModal();
+
+                resetTransactionForm();
+
+                editingTransactionId =
+                    null;
+
+
+                showToast(
+                    "Transaction updated."
+                );
+
+                return;
+            }
+
+
+            /*
+             * SUPABASE
+             */
+
+            const {
+                data,
+                error
+            } =
+                await supabaseClient
+                    .from("transactions")
+                    .update({
+
+                        transaction_date:
+                            date,
+
+                        description:
+                            description,
+
+                        amount:
+                            amount,
+
+                        transaction_type:
+                            type,
+
+                        category:
+                            category ||
+                            null,
+
+                        account:
+                            account ||
+                            null,
+
+                        notes:
+                            notes ||
+                            null
+
+                    })
+                    .eq(
+                        "id",
+                        editingTransactionId
+                    )
+                    .select()
+                    .single();
+
+
+            if (error) {
+
+                console.error(
+                    "Update transaction error:",
+                    error
+                );
+
+
+                showToast(
+                    error.message ||
+                    "Failed to update transaction."
+                );
+
+                return;
+            }
+
+
+            const updated =
+                normalizeTransaction(
+                    data
+                );
+
+
+            const index =
+                transactions.findIndex(
+                    t =>
+                        String(t.id) ===
+                        String(
+                            editingTransactionId
+                        )
+                );
+
+
+            if (index !== -1) {
+
+                transactions[index] =
+                    updated;
+            }
+
+
+            saveLocalData();
+
+            render();
+
+            closeTransactionModal();
+
+            resetTransactionForm();
+
+            editingTransactionId =
+                null;
+
+
+            showToast(
+                "Transaction updated!"
+            );
+
+            return;
+        }
+
+
+        /* =================================================
+           ADD NEW TRANSACTION
+        ================================================= */
+
+        const localTransaction = {
+
+            id:
+                createId(),
+
+            type,
+
+            amount,
+
+            date,
+
+            category,
+
+            account,
+
+            description,
+
+            notes
+
+        };
+
+
+        /*
+         * LOCAL STORAGE
+         */
+
+        if (!supabaseClient) {
+
+            transactions.unshift(
+                localTransaction
+            );
+
+            saveLocalData();
+
+            render();
+
+            closeTransactionModal();
+
+            resetTransactionForm();
+
+            showToast(
+                "Transaction saved locally."
+            );
+
+            return;
+        }
+
+
+        /*
+         * SUPABASE
+         */
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("transactions")
+                .insert({
+
+                    transaction_date:
+                        date,
+
+                    description:
+                        description,
+
+                    amount:
+                        amount,
+
+                    transaction_type:
+                        type,
+
+                    category:
+                        category ||
+                        null,
+
+                    account:
+                        account ||
+                        null,
+
+                    notes:
+                        notes ||
+                        null
+
+                })
+                .select()
+                .single();
+
+
+        if (error) {
+
+            console.error(
+                "Error adding transaction:",
+                error
+            );
+
+
+            showToast(
+                error.message ||
+                "Failed to save transaction."
+            );
+
+            return;
+        }
+
+
+        transactions.unshift(
+            normalizeTransaction(
+                data
+            )
+        );
+
+
+        saveLocalData();
+
+        render();
+
+        closeTransactionModal();
+
+        resetTransactionForm();
+
+        showToast(
+            "Transaction saved!"
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Transaction error:",
+            error
+        );
+
+
+        showToast(
+            error.message ||
+            "Something went wrong."
+        );
+
+
+    } finally {
+
+        if (submitButton) {
+
+            submitButton.disabled =
+                false;
+
+            submitButton.textContent =
+                submitButton.dataset.originalText ||
+                "Save Transaction";
+        }
+    }
+}
+
+
+/* =========================================================
+   DELETE TRANSACTION
+========================================================= */
+
+async function deleteTransaction(id) {
+
+    const transaction =
+        transactions.find(
+            t =>
+                String(t.id) ===
+                String(id)
+        );
+
+
+    if (!transaction) {
+
+        showToast(
+            "Transaction not found."
+        );
+
+        return;
+    }
+
+
+    const confirmed =
+        window.confirm(
+            `Delete "${transaction.description}" (${formatMoney(transaction.amount)})?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        /*
+         * LOCAL STORAGE
+         */
+
+        if (!supabaseClient) {
+
+            transactions =
+                transactions.filter(
+                    t =>
+                        String(t.id) !==
+                        String(id)
+                );
+
+
+            saveLocalData();
+
+            render();
+
+            showToast(
+                "Transaction deleted."
+            );
+
+            return;
+        }
+
+
+        /*
+         * SUPABASE
+         */
+
+        const {
+            error
+        } =
+            await supabaseClient
+                .from("transactions")
+                .delete()
+                .eq(
+                    "id",
+                    id
+                );
+
+
+        if (error) {
+
+            console.error(
+                "Delete transaction error:",
+                error
+            );
+
+
+            showToast(
+                error.message ||
+                "Failed to delete transaction."
+            );
+
+            return;
+        }
+
+
+        transactions =
+            transactions.filter(
+                t =>
+                    String(t.id) !==
+                    String(id)
+            );
+
+
+        saveLocalData();
+
+        render();
+
+        showToast(
+            "Transaction deleted."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Delete transaction error:",
+            error
+        );
+
+
+        showToast(
+            error.message ||
+            "Something went wrong while deleting."
+        );
+    }
+}
+
+
+/* =========================================================
+   CLOSE MODAL
+========================================================= */
+
+function closeTransactionModal() {
+
+    const modal =
+        document.getElementById(
+            "transactionModal"
+        );
+
+
+    if (modal) {
+        modal.classList.remove(
+            "show"
+        );
+    }
+
+
+    editingTransactionId =
+        null;
+
+
+    const title =
+        document.getElementById(
+            "transactionModalTitle"
+        );
+
+
+    if (title) {
+        title.textContent =
+            "Add Transaction";
+    }
+
+
+    const submitButton =
+        document.querySelector(
+            '#transactionForm button[type="submit"]'
+        );
+
+
+    if (submitButton) {
+        submitButton.textContent =
+            "💾 Save Transaction";
+    }
+}
+
+
+/* =========================================================
+   ENHANCE EXISTING TRANSACTION TABLE
+   Adds EDIT button + mobile labels
+========================================================= */
+
+const originalRenderTransactions =
+    renderTransactions;
+
+
+renderTransactions =
+    function () {
+
+        originalRenderTransactions();
+
+
+        const tbody =
+            document.getElementById(
+                "transactionTable"
+            );
+
+
+        if (!tbody) {
+            return;
+        }
+
+
+        const rows =
+            tbody.querySelectorAll(
+                "tr"
+            );
+
+
+        rows.forEach(
+            row => {
+
+                const cells =
+                    row.querySelectorAll(
+                        "td"
+                    );
+
+
+                /*
+                 * Skip empty/loading rows.
+                 */
+
+                if (
+                    cells.length !== 7
+                ) {
+                    return;
+                }
+
+
+                /*
+                 * Mobile labels.
+                 */
+
+                const labels = [
+                    "Date",
+                    "Description",
+                    "Category",
+                    "Type",
+                    "Amount",
+                    "Account",
+                    "Action"
+                ];
+
+
+                cells.forEach(
+                    (cell, index) => {
+
+                        if (
+                            labels[index]
+                        ) {
+
+                            cell.dataset.label =
+                                labels[index];
+                        }
+                    }
+                );
+
+
+                /*
+                 * Find existing Delete button.
+                 */
+
+                const deleteButton =
+                    row.querySelector(
+                        ".delete-btn"
+                    );
+
+
+                if (!deleteButton) {
+                    return;
+                }
+
+
+                const onclick =
+                    deleteButton.getAttribute(
+                        "onclick"
+                    ) ||
+                    "";
+
+
+                /*
+                 * Extract transaction ID
+                 * from:
+                 *
+                 * deleteTransaction("ID")
+                 */
+
+                const match =
+                    onclick.match(
+                        /deleteTransaction\((.+)\)/
+                    );
+
+
+                if (!match) {
+                    return;
+                }
+
+
+                let id;
+
+
+                try {
+
+                    id =
+                        JSON.parse(
+                            match[1]
+                        );
+
+                } catch {
+
+                    id =
+                        match[1]
+                            .replace(
+                                /^['"]|['"]$/g,
+                                ""
+                            );
+                }
+
+
+                const actionCell =
+                    cells[6];
+
+
+                if (!actionCell) {
+                    return;
+                }
+
+
+                actionCell.innerHTML = "";
+
+
+                const actions =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                actions.className =
+                    "transaction-actions";
+
+
+                /*
+                 * EDIT
+                 */
+
+                const editButton =
+                    document.createElement(
+                        "button"
+                    );
+
+
+                editButton.type =
+                    "button";
+
+                editButton.className =
+                    "btn-edit";
+
+                editButton.innerHTML =
+                    "✏️ Edit";
+
+                editButton.title =
+                    "Edit transaction";
+
+
+                editButton.addEventListener(
+                    "click",
+                    () =>
+                        editTransaction(
+                            id
+                        )
+                );
+
+
+                /*
+                 * DELETE
+                 */
+
+                const newDeleteButton =
+                    document.createElement(
+                        "button"
+                    );
+
+
+                newDeleteButton.type =
+                    "button";
+
+                newDeleteButton.className =
+                    "delete-btn";
+
+                newDeleteButton.innerHTML =
+                    "🗑️ Delete";
+
+                newDeleteButton.title =
+                    "Delete transaction";
+
+
+                newDeleteButton.addEventListener(
+                    "click",
+                    () =>
+                        deleteTransaction(
+                            id
+                        )
+                );
+
+
+                actions.appendChild(
+                    editButton
+                );
+
+                actions.appendChild(
+                    newDeleteButton
+                );
+
+
+                actionCell.appendChild(
+                    actions
+                );
+            }
+        );
+    };
+
+
+/* =========================================================
+   MAKE SURE THE NEW FUNCTIONS ARE USED
+========================================================= */
+
+window.editTransaction =
+    editTransaction;
+
+window.deleteTransaction =
+    deleteTransaction;
+
+window.openTransactionModal =
+    openTransactionModal;
+
+window.closeTransactionModal =
+    closeTransactionModal;
