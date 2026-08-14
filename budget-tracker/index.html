@@ -10,31 +10,72 @@
         content="width=device-width, initial-scale=1.0"
     >
 
+    <meta
+        name="description"
+        content="Personal budget tracker for managing income, expenses, bills, savings and transactions."
+    >
+
     <title>My Budget Tracker</title>
 
-    <!-- Main CSS -->
-    <link rel="stylesheet" href="./style.css">
 
+    <!-- =====================================================
+         CSS
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="./style.css"
+    >
+
+
+    <!-- =====================================================
+         EXTERNAL LIBRARIES
+    ====================================================== -->
 
     <!-- SheetJS - Excel Export -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"
+        defer
+    ></script>
 
 
-    <!-- jsPDF - PDF Export -->
-    <script src="https://cdn.jsdelivr.net/npm/jspdf@latest/dist/jspdf.umd.min.js"></script>
+    <!-- jsPDF -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/jspdf@latest/dist/jspdf.umd.min.js"
+        defer
+    ></script>
 
 
     <!-- jsPDF AutoTable -->
-    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@latest/dist/jspdf.plugin.autotable.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/jspdf-autotable@latest/dist/jspdf.plugin.autotable.min.js"
+        defer
+    ></script>
 
 
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chart.js"
+        defer
+    ></script>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Your JavaScript -->
+    <script src="./script.js"></script>
 
 </head>
 
 
 <body>
+
+
+<!-- =========================================================
+     APP
+========================================================= -->
+
+<div class="app">
 
 
     <!-- =====================================================
@@ -43,62 +84,116 @@
 
     <aside class="sidebar">
 
+        <!-- LOGO -->
+
         <div class="logo">
 
-            💰
+            <span class="logo-icon">
+                💰
+            </span>
 
-            <span>
+            <span class="logo-text">
                 Budget Tracker
             </span>
 
         </div>
 
 
+        <!-- NAVIGATION -->
+
         <nav class="nav">
 
-            <div
+            <button
+                type="button"
                 class="nav-item active"
                 onclick="scrollToSection('dashboard')"
             >
-                📊
-                Dashboard
-            </div>
+
+                <span>📊</span>
+
+                <span>
+                    Dashboard
+                </span>
+
+            </button>
 
 
-            <div
+            <button
+                type="button"
                 class="nav-item"
                 onclick="openTransactionModal()"
             >
-                ➕
-                Add Transaction
-            </div>
+
+                <span>➕</span>
+
+                <span>
+                    Add Transaction
+                </span>
+
+            </button>
 
 
-            <div
+            <button
+                type="button"
                 class="nav-item"
                 onclick="openBudgetModal()"
             >
-                🎯
-                Budgets
-            </div>
+
+                <span>🎯</span>
+
+                <span>
+                    Budgets
+                </span>
+
+            </button>
 
 
-            <div
+            <button
+                type="button"
                 class="nav-item"
                 onclick="scrollToSection('transactions')"
             >
-                💳
-                Transactions
-            </div>
+
+                <span>💳</span>
+
+                <span>
+                    Transactions
+                </span>
+
+            </button>
 
         </nav>
+
+
+        <!-- DATABASE STATUS -->
+
+        <div class="database-status">
+
+            <span
+                class="status-dot"
+                id="databaseStatusDot"
+            ></span>
+
+            <div>
+
+                <strong>
+                    Database
+                </strong>
+
+                <small id="databaseStatus">
+                    Local Storage
+                </small>
+
+            </div>
+
+        </div>
 
     </aside>
 
 
 
     <!-- =====================================================
-         MAIN
+         MAIN CONTENT
     ====================================================== -->
 
     <main class="main">
@@ -124,15 +219,21 @@
             </div>
 
 
-            <button
-                class="btn-primary"
-                onclick="openTransactionModal()"
-            >
+            <div class="topbar-actions">
 
-                ➕
-                Add Transaction
+                <button
+                    type="button"
+                    class="btn-primary"
+                    onclick="openTransactionModal()"
+                >
 
-            </button>
+                    <span>➕</span>
+
+                    Add Transaction
+
+                </button>
+
+            </div>
 
         </header>
 
@@ -142,45 +243,60 @@
              DASHBOARD
         ================================================== -->
 
-        <section id="dashboard">
+        <section
+            id="dashboard"
+            class="dashboard"
+        >
 
 
             <!-- PERIOD SELECTOR -->
 
             <div class="period-bar">
 
-                <strong>
-                    View:
-                </strong>
+                <div class="period-label">
+
+                    <strong>
+                        View:
+                    </strong>
+
+                </div>
 
 
-                <button
-                    class="period-btn active"
-                    data-period="daily"
-                >
-                    Daily
-                </button>
+                <div class="period-buttons">
+
+                    <button
+                        type="button"
+                        class="period-btn active"
+                        data-period="daily"
+                    >
+                        Daily
+                    </button>
 
 
-                <button
-                    class="period-btn"
-                    data-period="monthly"
-                >
-                    Monthly
-                </button>
+                    <button
+                        type="button"
+                        class="period-btn"
+                        data-period="monthly"
+                    >
+                        Monthly
+                    </button>
 
 
-                <button
-                    class="period-btn"
-                    data-period="yearly"
-                >
-                    Yearly
-                </button>
+                    <button
+                        type="button"
+                        class="period-btn"
+                        data-period="yearly"
+                    >
+                        Yearly
+                    </button>
+
+                </div>
 
 
                 <input
                     type="date"
                     id="periodDate"
+                    aria-label="Select period date"
                 >
 
             </div>
@@ -295,7 +411,7 @@
             <div class="content-grid">
 
 
-                <!-- CHART -->
+                <!-- INCOME VS EXPENSE CHART -->
 
                 <div class="card">
 
@@ -320,6 +436,7 @@
 
                         <canvas
                             id="incomeExpenseChart"
+                            aria-label="Income versus expenses chart"
                         ></canvas>
 
                     </div>
@@ -351,9 +468,12 @@
 
                     <div
                         id="categoryBreakdown"
+                        class="category-breakdown"
                     >
 
-                        <!-- JavaScript generates categories -->
+                        <div class="loading">
+                            Loading categories...
+                        </div>
 
                     </div>
 
@@ -381,13 +501,14 @@
                         </h2>
 
                         <p>
-                            Monitor your spending limits
+                            Monitor your spending limits.
                         </p>
 
                     </div>
 
 
                     <button
+                        type="button"
                         class="btn-primary"
                         onclick="openBudgetModal()"
                     >
@@ -400,9 +521,14 @@
                 </div>
 
 
-                <div id="budgetList">
+                <div
+                    id="budgetList"
+                    class="budget-list"
+                >
 
-                    <!-- JavaScript generates budgets -->
+                    <div class="loading">
+                        Loading budgets...
+                    </div>
 
                 </div>
 
@@ -423,6 +549,8 @@
         >
 
 
+            <!-- HEADER -->
+
             <div class="card-header">
 
                 <div>
@@ -439,21 +567,31 @@
                 </div>
 
 
+                <!-- EXPORT BUTTONS -->
+
                 <div class="export-buttons">
 
                     <button
+                        type="button"
                         class="btn-green"
                         onclick="exportExcel()"
                     >
-                        📊 Excel
+
+                        📊
+                        Excel
+
                     </button>
 
 
                     <button
+                        type="button"
                         class="btn-red"
                         onclick="exportPDF()"
                     >
-                        📄 PDF
+
+                        📄
+                        PDF
+
                     </button>
 
                 </div>
@@ -471,83 +609,205 @@
 
                 <!-- SEARCH -->
 
-                <input
-                    type="search"
-                    id="searchInput"
-                    placeholder="🔎 Search transactions..."
-                >
+                <div class="filter-group search-filter">
+
+                    <label
+                        for="searchInput"
+                        class="sr-only"
+                    >
+                        Search transactions
+                    </label>
+
+                    <input
+                        type="search"
+                        id="searchInput"
+                        placeholder="🔎 Search transactions..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
 
 
                 <!-- TYPE -->
 
-                <select id="filterType">
+                <div class="filter-group">
 
-                    <option value="all">
-                        All Types
-                    </option>
+                    <label
+                        for="filterType"
+                        class="sr-only"
+                    >
+                        Transaction type
+                    </label>
 
-                    <option value="income">
-                        Income
-                    </option>
+                    <select id="filterType">
 
-                    <option value="expense">
-                        Expense
-                    </option>
+                        <option value="all">
+                            All Types
+                        </option>
 
-                </select>
+                        <option value="income">
+                            Income
+                        </option>
+
+                        <option value="expense">
+                            Expense
+                        </option>
+
+                    </select>
+
+                </div>
+
 
 
                 <!-- CATEGORY -->
 
-                <select id="filterCategory">
+                <div class="filter-group">
 
-                    <option value="all">
-                        All Categories
-                    </option>
+                    <label
+                        for="filterCategory"
+                        class="sr-only"
+                    >
+                        Transaction category
+                    </label>
 
-                    <option value="Bill">
-                        Bill
-                    </option>
+                    <select id="filterCategory">
 
-                    <option value="Essential">
-                        Essential
-                    </option>
+                        <option value="all">
+                            All Categories
+                        </option>
 
-                    <option value="Savings">
-                        Savings
-                    </option>
+                        <option value="Bill">
+                            Bill
+                        </option>
 
-                    <option value="Credit Card">
-                        Credit Card
-                    </option>
+                        <option value="Essential">
+                            Essential
+                        </option>
 
-                    <option value="Non-Essential">
-                        Non-Essential
-                    </option>
+                        <option value="Savings">
+                            Savings
+                        </option>
 
-                    <option value="Extra">
-                        Extra
-                    </option>
+                        <option value="Credit Card">
+                            Credit Card
+                        </option>
 
-                </select>
+                        <option value="Non-Essential">
+                            Non-Essential
+                        </option>
+
+                        <option value="Extra">
+                            Extra
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+
+                <!-- ACCOUNT -->
+
+                <div class="filter-group">
+
+                    <label
+                        for="filterAccount"
+                        class="sr-only"
+                    >
+                        Account
+                    </label>
+
+                    <select id="filterAccount">
+
+                        <option value="all">
+                            All Accounts
+                        </option>
+
+                        <option value="Cash">
+                            Cash
+                        </option>
+
+                        <option value="Bank">
+                            Bank
+                        </option>
+
+                        <option value="GCash">
+                            GCash
+                        </option>
+
+                        <option value="Maya">
+                            Maya
+                        </option>
+
+                        <option value="Credit Card">
+                            Credit Card
+                        </option>
+
+                        <option value="Other">
+                            Other
+                        </option>
+
+                    </select>
+
+                </div>
+
 
 
                 <!-- FROM -->
 
-                <input
-                    type="date"
-                    id="filterDateFrom"
-                    title="From date"
-                >
+                <div class="filter-group">
+
+                    <label
+                        for="filterDateFrom"
+                        class="sr-only"
+                    >
+                        From date
+                    </label>
+
+                    <input
+                        type="date"
+                        id="filterDateFrom"
+                        title="From date"
+                    >
+
+                </div>
+
 
 
                 <!-- TO -->
 
-                <input
-                    type="date"
-                    id="filterDateTo"
-                    title="To date"
+                <div class="filter-group">
+
+                    <label
+                        for="filterDateTo"
+                        class="sr-only"
+                    >
+                        To date
+                    </label>
+
+                    <input
+                        type="date"
+                        id="filterDateTo"
+                        title="To date"
+                    >
+
+                </div>
+
+
+
+                <!-- CLEAR FILTERS -->
+
+                <button
+                    type="button"
+                    class="btn-gray"
+                    onclick="clearFilters()"
                 >
+
+                    ✕
+                    Clear
+
+                </button>
 
             </div>
 
@@ -566,12 +826,17 @@
                         <tr>
 
                             <th>
+
                                 <button
+                                    type="button"
                                     onclick="sortTransactions('date')"
-                                    class="btn-gray"
+                                    class="btn-gray table-sort"
                                 >
-                                    Date ↕
+
+                                    Date ↕️
+
                                 </button>
+
                             </th>
 
 
@@ -593,10 +858,13 @@
                             <th>
 
                                 <button
+                                    type="button"
                                     onclick="sortTransactions('amount')"
-                                    class="btn-gray"
+                                    class="btn-gray table-sort"
                                 >
-                                    Amount ↕
+
+                                    Amount ↕️
+
                                 </button>
 
                             </th>
@@ -618,7 +886,18 @@
 
                     <tbody id="transactionTable">
 
-                        <!-- JavaScript generates rows -->
+                        <tr>
+
+                            <td
+                                colspan="7"
+                                class="loading-cell"
+                            >
+
+                                Loading transactions...
+
+                            </td>
+
+                        </tr>
 
                     </tbody>
 
@@ -632,486 +911,540 @@
 
     </main>
 
+</div>
 
 
-    <!-- =====================================================
-         ADD TRANSACTION MODAL
-    ====================================================== -->
 
-    <div
-        class="modal"
-        id="transactionModal"
-    >
+<!-- =========================================================
+     ADD TRANSACTION MODAL
+========================================================= -->
 
-        <div class="modal-content">
+<div
+    class="modal"
+    id="transactionModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="transactionModalTitle"
+>
 
 
-            <div class="modal-header">
+    <div class="modal-content">
 
-                <h2>
+
+        <!-- HEADER -->
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2 id="transactionModalTitle">
                     Add Transaction
                 </h2>
 
+                <p>
+                    Record money coming in or going out.
+                </p>
 
-                <button
-                    class="close"
-                    onclick="closeTransactionModal()"
-                >
-                    ×
-                </button>
+            </div>
+
+
+            <button
+                type="button"
+                class="close"
+                onclick="closeTransactionModal()"
+                aria-label="Close transaction modal"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+
+        <!-- FORM -->
+
+        <form id="transactionForm">
+
+
+            <div class="form-grid">
+
+
+                <!-- TYPE -->
+
+                <div class="form-group">
+
+                    <label for="transactionType">
+                        Transaction Type
+                    </label>
+
+
+                    <select
+                        id="transactionType"
+                        required
+                    >
+
+                        <option value="expense">
+                            Money Out / Expense
+                        </option>
+
+                        <option value="income">
+                            Money In / Income
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+
+                <!-- AMOUNT -->
+
+                <div class="form-group">
+
+                    <label for="amount">
+                        Amount
+                    </label>
+
+
+                    <input
+                        type="number"
+                        id="amount"
+                        min="0.01"
+                        step="0.01"
+                        inputmode="decimal"
+                        placeholder="0.00"
+                        required
+                    >
+
+                </div>
+
+
+
+                <!-- DATE -->
+
+                <div class="form-group">
+
+                    <label for="transactionDate">
+                        Date
+                    </label>
+
+
+                    <input
+                        type="date"
+                        id="transactionDate"
+                        required
+                    >
+
+                </div>
+
+
+
+                <!-- CATEGORY -->
+
+                <div class="form-group">
+
+                    <label for="category">
+                        Category
+                    </label>
+
+
+                    <select
+                        id="category"
+                        required
+                    >
+
+                        <option value="Bill">
+                            Bill
+                        </option>
+
+                        <option value="Essential">
+                            Essential
+                        </option>
+
+                        <option value="Savings">
+                            Savings
+                        </option>
+
+                        <option value="Credit Card">
+                            Credit Card
+                        </option>
+
+                        <option value="Non-Essential">
+                            Non-Essential
+                        </option>
+
+                        <option value="Extra">
+                            Extra
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+
+                <!-- ACCOUNT -->
+
+                <div class="form-group">
+
+                    <label for="account">
+                        Account / Wallet
+                    </label>
+
+
+                    <select
+                        id="account"
+                        required
+                    >
+
+                        <option value="Cash">
+                            Cash
+                        </option>
+
+                        <option value="Bank">
+                            Bank
+                        </option>
+
+                        <option value="GCash">
+                            GCash
+                        </option>
+
+                        <option value="Maya">
+                            Maya
+                        </option>
+
+                        <option value="Credit Card">
+                            Credit Card
+                        </option>
+
+                        <option value="Other">
+                            Other
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+
+                <!-- DESCRIPTION -->
+
+                <div class="form-group">
+
+                    <label for="description">
+                        Description
+                    </label>
+
+
+                    <input
+                        type="text"
+                        id="description"
+                        maxlength="150"
+                        placeholder="e.g. Grocery shopping"
+                        required
+                    >
+
+                </div>
+
+
+
+                <!-- NOTES -->
+
+                <div class="form-group full">
+
+                    <label for="notes">
+                        Notes
+                    </label>
+
+
+                    <textarea
+                        id="notes"
+                        rows="3"
+                        maxlength="500"
+                        placeholder="Optional notes..."
+                    ></textarea>
+
+                </div>
+
 
             </div>
 
 
 
-            <form id="transactionForm">
+            <!-- ACTIONS -->
 
+            <div class="modal-actions">
 
-                <div class="form-grid">
+                <button
+                    type="button"
+                    class="btn-gray"
+                    onclick="closeTransactionModal()"
+                >
+                    Cancel
+                </button>
 
 
-                    <!-- TYPE -->
+                <button
+                    type="submit"
+                    class="btn-primary"
+                >
+                    💾 Save Transaction
+                </button>
 
-                    <div class="form-group">
+            </div>
 
-                        <label for="transactionType">
-                            Transaction Type
-                        </label>
 
+        </form>
 
-                        <select
-                            id="transactionType"
-                            required
-                        >
-
-                            <option value="expense">
-                                Money Out / Expense
-                            </option>
-
-                            <option value="income">
-                                Money In / Income
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-
-                    <!-- AMOUNT -->
-
-                    <div class="form-group">
-
-                        <label for="amount">
-                            Amount
-                        </label>
-
-
-                        <input
-                            type="number"
-                            id="amount"
-                            min="0.01"
-                            step="0.01"
-                            placeholder="0.00"
-                            required
-                        >
-
-                    </div>
-
-
-
-                    <!-- DATE -->
-
-                    <div class="form-group">
-
-                        <label for="transactionDate">
-                            Date
-                        </label>
-
-
-                        <input
-                            type="date"
-                            id="transactionDate"
-                            required
-                        >
-
-                    </div>
-
-
-
-                    <!-- CATEGORY -->
-
-                    <div class="form-group">
-
-                        <label for="category">
-                            Category
-                        </label>
-
-
-                        <select
-                            id="category"
-                            required
-                        >
-
-                            <option value="Bill">
-                                Bill
-                            </option>
-
-                            <option value="Essential">
-                                Essential
-                            </option>
-
-                            <option value="Savings">
-                                Savings
-                            </option>
-
-                            <option value="Credit Card">
-                                Credit Card
-                            </option>
-
-                            <option value="Non-Essential">
-                                Non-Essential
-                            </option>
-
-                            <option value="Extra">
-                                Extra
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-
-                    <!-- ACCOUNT -->
-
-                    <div class="form-group">
-
-                        <label for="account">
-                            Account / Wallet
-                        </label>
-
-
-                        <select
-                            id="account"
-                            required
-                        >
-
-                            <option value="Cash">
-                                Cash
-                            </option>
-
-                            <option value="Bank">
-                                Bank
-                            </option>
-
-                            <option value="GCash">
-                                GCash
-                            </option>
-
-                            <option value="Maya">
-                                Maya
-                            </option>
-
-                            <option value="Credit Card">
-                                Credit Card
-                            </option>
-
-                            <option value="Other">
-                                Other
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-
-                    <!-- DESCRIPTION -->
-
-                    <div class="form-group">
-
-                        <label for="description">
-                            Description
-                        </label>
-
-
-                        <input
-                            type="text"
-                            id="description"
-                            placeholder="e.g. Grocery shopping"
-                            required
-                        >
-
-                    </div>
-
-
-
-                    <!-- NOTES -->
-
-                    <div class="form-group full">
-
-                        <label for="notes">
-                            Notes
-                        </label>
-
-
-                        <input
-                            type="text"
-                            id="notes"
-                            placeholder="Optional notes..."
-                        >
-
-                    </div>
-
-
-                </div>
-
-
-
-                <!-- ACTIONS -->
-
-                <div class="modal-actions">
-
-                    <button
-                        type="button"
-                        class="btn-gray"
-                        onclick="closeTransactionModal()"
-                    >
-                        Cancel
-                    </button>
-
-
-                    <button
-                        type="submit"
-                        class="btn-primary"
-                    >
-                        Save Transaction
-                    </button>
-
-                </div>
-
-
-            </form>
-
-
-        </div>
 
     </div>
 
+</div>
 
 
-    <!-- =====================================================
-         BUDGET MODAL
-    ====================================================== -->
 
-    <div
-        class="modal"
-        id="budgetModal"
-    >
+<!-- =========================================================
+     BUDGET MODAL
+========================================================= -->
 
-        <div class="modal-content">
+<div
+    class="modal"
+    id="budgetModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="budgetModalTitle"
+>
 
 
-            <div class="modal-header">
+    <div class="modal-content">
 
-                <h2>
+
+        <!-- HEADER -->
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2 id="budgetModalTitle">
                     Manage Budgets
                 </h2>
 
+                <p>
+                    Set spending limits for each category.
+                </p>
 
-                <button
-                    class="close"
-                    onclick="closeBudgetModal()"
-                >
-                    ×
-                </button>
+            </div>
+
+
+            <button
+                type="button"
+                class="close"
+                onclick="closeBudgetModal()"
+                aria-label="Close budget modal"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+
+        <!-- FORM -->
+
+        <form id="budgetForm">
+
+
+            <div class="form-grid">
+
+
+                <!-- BILL -->
+
+                <div class="form-group">
+
+                    <label for="budgetBill">
+                        Bill Budget
+                    </label>
+
+
+                    <input
+                        type="number"
+                        id="budgetBill"
+                        min="0"
+                        step="0.01"
+                        inputmode="decimal"
+                        placeholder="0.00"
+                    >
+
+                </div>
+
+
+
+                <!-- ESSENTIAL -->
+
+                <div class="form-group">
+
+                    <label for="budgetEssential">
+                        Essential Budget
+                    </label>
+
+
+                    <input
+                        type="number"
+                        id="budgetEssential"
+                        min="0"
+                        step="0.01"
+                        inputmode="decimal"
+                        placeholder="0.00"
+                    >
+
+                </div>
+
+
+
+                <!-- SAVINGS -->
+
+                <div class="form-group">
+
+                    <label for="budgetSavings">
+                        Savings Goal
+                    </label>
+
+
+                    <input
+                        type="number"
+                        id="budgetSavings"
+                        min="0"
+                        step="0.01"
+                        inputmode="decimal"
+                        placeholder="0.00"
+                    >
+
+                </div>
+
+
+
+                <!-- CREDIT CARD -->
+
+                <div class="form-group">
+
+                    <label for="budgetCreditCard">
+                        Credit Card Budget
+                    </label>
+
+
+                    <input
+                        type="number"
+                        id="budgetCreditCard"
+                        min="0"
+                        step="0.01"
+                        inputmode="decimal"
+                        placeholder="0.00"
+                    >
+
+                </div>
+
+
+
+                <!-- NON ESSENTIAL -->
+
+                <div class="form-group">
+
+                    <label for="budgetNonEssential">
+                        Non-Essential Budget
+                    </label>
+
+
+                    <input
+                        type="number"
+                        id="budgetNonEssential"
+                        min="0"
+                        step="0.01"
+                        inputmode="decimal"
+                        placeholder="0.00"
+                    >
+
+                </div>
+
+
+
+                <!-- EXTRA -->
+
+                <div class="form-group">
+
+                    <label for="budgetExtra">
+                        Extra Budget
+                    </label>
+
+
+                    <input
+                        type="number"
+                        id="budgetExtra"
+                        min="0"
+                        step="0.01"
+                        inputmode="decimal"
+                        placeholder="0.00"
+                    >
+
+                </div>
+
 
             </div>
 
 
 
-            <form id="budgetForm">
+            <!-- ACTIONS -->
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="btn-gray"
+                    onclick="closeBudgetModal()"
+                >
+                    Cancel
+                </button>
 
 
-                <div class="form-grid">
+                <button
+                    type="submit"
+                    class="btn-primary"
+                >
+                    💾 Save Budgets
+                </button>
+
+            </div>
 
 
-                    <!-- BILL -->
+        </form>
 
-                    <div class="form-group">
-
-                        <label for="budgetBill">
-                            Bill Budget
-                        </label>
-
-
-                        <input
-                            type="number"
-                            id="budgetBill"
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
-                        >
-
-                    </div>
-
-
-
-                    <!-- ESSENTIAL -->
-
-                    <div class="form-group">
-
-                        <label for="budgetEssential">
-                            Essential Budget
-                        </label>
-
-
-                        <input
-                            type="number"
-                            id="budgetEssential"
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
-                        >
-
-                    </div>
-
-
-
-                    <!-- SAVINGS -->
-
-                    <div class="form-group">
-
-                        <label for="budgetSavings">
-                            Savings Goal
-                        </label>
-
-
-                        <input
-                            type="number"
-                            id="budgetSavings"
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
-                        >
-
-                    </div>
-
-
-
-                    <!-- CREDIT CARD -->
-
-                    <div class="form-group">
-
-                        <label for="budgetCreditCard">
-                            Credit Card Budget
-                        </label>
-
-
-                        <input
-                            type="number"
-                            id="budgetCreditCard"
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
-                        >
-
-                    </div>
-
-
-
-                    <!-- NON ESSENTIAL -->
-
-                    <div class="form-group">
-
-                        <label for="budgetNonEssential">
-                            Non-Essential Budget
-                        </label>
-
-
-                        <input
-                            type="number"
-                            id="budgetNonEssential"
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
-                        >
-
-                    </div>
-
-
-
-                    <!-- EXTRA -->
-
-                    <div class="form-group">
-
-                        <label for="budgetExtra">
-                            Extra Budget
-                        </label>
-
-
-                        <input
-                            type="number"
-                            id="budgetExtra"
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
-                        >
-
-                    </div>
-
-
-                </div>
-
-
-
-                <div class="modal-actions">
-
-                    <button
-                        type="button"
-                        class="btn-gray"
-                        onclick="closeBudgetModal()"
-                    >
-                        Cancel
-                    </button>
-
-
-                    <button
-                        type="submit"
-                        class="btn-primary"
-                    >
-                        Save Budgets
-                    </button>
-
-                </div>
-
-
-            </form>
-
-
-        </div>
 
     </div>
 
-
-
-    <!-- =====================================================
-         TOAST NOTIFICATION
-    ====================================================== -->
-
-    <div
-        class="toast"
-        id="toast"
-    ></div>
+</div>
 
 
 
-    <!-- =====================================================
-         JAVASCRIPT
-    ====================================================== -->
+<!-- =========================================================
+     TOAST
+========================================================= -->
 
-    <script src="./script.js"></script>
+<div
+    class="toast"
+    id="toast"
+    role="status"
+    aria-live="polite"
+></div>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script
+    src="./script.js"
+    defer
+></script>
 
 
 </body>
