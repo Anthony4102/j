@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Atlas — command console for your daily tools.">
+<title>Atlas — Ask Atlas</title>
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="./atlas.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="atlas-shell">
+
+  <aside class="atlas-sidebar">
+    <div class="atlas-brand"><div class="atlas-brand-icon">◈</div><span>ATLAS</span></div>
+    <nav class="atlas-nav">
+      <a href="../dashboard/">🏠 <span>Dashboard</span></a>
+      <a href="../tools/budget-tracker/">💰 <span>Budget</span></a>
+      <a class="active" href="./">🤖 <span>Ask Atlas</span></a>
+    </nav>
+  </aside>
+
+  <main class="atlas-main">
+    <header class="atlas-topbar">
+      <div>
+        <div class="atlas-eyebrow">Command console</div>
+        <h1 class="atlas-title">Ask Atlas</h1>
+        <p class="atlas-subtitle">Type a command, or just talk normally — Atlas understands a few phrasings.</p>
+      </div>
+    </header>
+
+    <section class="atlas-console" aria-live="polite" id="consoleLog">
+      <div class="log-entry log-system">
+        <div class="log-bubble">
+          <strong>Atlas</strong>
+          <p>Hi! Try <code>/expense 200 food lunch</code>, <code>/task buy milk</code>, or <code>/balance</code>. Type <code>/help</code> any time to see everything I understand.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="atlas-command">
+      <input id="commandInput" type="text" autocomplete="off" placeholder="Ask Atlas or enter a quick command…" aria-label="Ask Atlas">
+      <button id="commandButton" type="button">Send</button>
+    </section>
+
+    <div class="atlas-suggestions" id="suggestions"></div>
+  </main>
+</div>
+
+<script src="./atlas.js"></script>
+</body>
+</html>
