@@ -14,6 +14,8 @@
 
     <title>Atlas — Dashboard</title>
 
+    <script src="../js/atlas-settings.js"></script>
+
     <link rel="stylesheet" href="../css/global.css">
     <link rel="stylesheet" href="dashboard.css">
 
@@ -35,7 +37,7 @@
     <a href="#calendar">📅 <span>Calendar</span></a>
     <div class="atlas-divider"></div>
     <a href="../atlas/">🤖 <span>Ask Atlas</span></a>
-    <a href="#settings">⚙️ <span>Settings</span></a>
+    <button class="atlas-nav-btn" id="settingsToggle" type="button">⚙️ <span>Settings</span></button>
   </nav>
 </aside>
 <main class="atlas-main">
@@ -57,33 +59,33 @@
 
   <section class="atlas-section">
     <div class="atlas-section-title"><h2>Your tools</h2><a class="atlas-link" href="../tools/budget-tracker/">Open Budget →</a></div>
-    <div class="atlas-tool-grid">
-      <article class="atlas-card atlas-tool">
+    <div class="atlas-tool-grid" id="toolGrid">
+      <article class="atlas-card atlas-tool" data-tool="budget">
         <div class="atlas-tool-icon">💰</div><h3>Budget Tracker</h3>
         <p>Track income, expenses, budgets, savings and financial activity.</p>
         <a class="atlas-tool-action" href="../tools/budget-tracker/">Open Budget Tracker →</a>
       </article>
-      <article class="atlas-card atlas-tool" id="tasks">
+      <article class="atlas-card atlas-tool" id="tasks" data-tool="tasks">
         <div class="atlas-tool-icon">✅</div><h3>Tasks & Habits</h3>
         <p>Plan today's priorities and build routines. This will become the next Atlas module.</p>
         <span class="atlas-tool-action">Coming next</span>
       </article>
-      <article class="atlas-card atlas-tool" id="notes">
+      <article class="atlas-card atlas-tool" id="notes" data-tool="notes">
         <div class="atlas-tool-icon">📝</div><h3>Notes</h3>
         <p>Keep a quick scratchpad for thoughts, links and information you want Atlas to remember.</p>
         <span class="atlas-tool-action">Coming next</span>
       </article>
-      <article class="atlas-card atlas-tool" id="goals">
+      <article class="atlas-card atlas-tool" id="goals" data-tool="goals">
         <div class="atlas-tool-icon">🎯</div><h3>Goals</h3>
         <p>Track personal projects and long-term goals in one place.</p>
         <span class="atlas-tool-action">Coming next</span>
       </article>
-      <article class="atlas-card atlas-tool" id="calendar">
+      <article class="atlas-card atlas-tool" id="calendar" data-tool="calendar">
         <div class="atlas-tool-icon">📅</div><h3>Calendar</h3>
         <p>Bring your upcoming events and deadlines into the same daily view.</p>
         <span class="atlas-tool-action">Coming next</span>
       </article>
-      <article class="atlas-card atlas-tool">
+      <article class="atlas-card atlas-tool" data-tool="assistant">
         <div class="atlas-tool-icon">🤖</div><h3>Atlas Assistant</h3>
         <p>Ask Atlas questions and eventually let it operate your tools using natural language.</p>
         <a class="atlas-tool-action" href="../atlas/">Open Atlas →</a>
@@ -106,5 +108,56 @@
   <a href="../atlas/"><span>🤖</span>Atlas</a>
 </nav>
 </div>
+
+<div class="atlas-overlay" id="settingsOverlay"></div>
+<aside class="atlas-settings-panel" id="settingsPanel" aria-hidden="true">
+  <header class="settings-header">
+    <h2>Settings</h2>
+    <button class="settings-close" id="settingsClose" type="button" aria-label="Close settings">✕</button>
+  </header>
+
+  <div class="settings-body">
+
+    <section class="settings-group">
+      <label class="settings-label" for="settingName">Your name</label>
+      <input class="settings-input" id="settingName" type="text" placeholder="e.g. Anthony" maxlength="30">
+      <p class="settings-hint">Used in your greeting up top.</p>
+    </section>
+
+    <section class="settings-group">
+      <div class="settings-row">
+        <div>
+          <label class="settings-label" for="settingTheme">Dark mode</label>
+          <p class="settings-hint">Applies across Atlas.</p>
+        </div>
+        <button class="settings-switch" id="settingTheme" role="switch" aria-checked="false" type="button"><span class="settings-switch-knob"></span></button>
+      </div>
+    </section>
+
+    <section class="settings-group">
+      <label class="settings-label" for="settingCurrency">Currency</label>
+      <select class="settings-input" id="settingCurrency">
+        <option value="PHP">₱ Philippine Peso</option>
+        <option value="USD">$ US Dollar</option>
+        <option value="EUR">€ Euro</option>
+      </select>
+    </section>
+
+    <section class="settings-group">
+      <label class="settings-label">Show on dashboard</label>
+      <div class="settings-checklist" id="toolVisibilityList"></div>
+    </section>
+
+    <section class="settings-group">
+      <label class="settings-label">Data</label>
+      <button class="settings-action" id="checkConnection" type="button">Check Supabase connection</button>
+      <p class="settings-hint" id="connectionStatus">Not checked yet.</p>
+      <button class="settings-action settings-action-danger" id="clearCache" type="button">Clear local cache</button>
+      <p class="settings-hint">Removes locally saved transactions, tasks and notes on this device. Your Supabase data is not affected.</p>
+    </section>
+
+  </div>
+</aside>
+
 </body>
 </html>

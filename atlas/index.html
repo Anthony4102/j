@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="description" content="Atlas — command console for your daily tools.">
 <title>Atlas — Ask Atlas</title>
+<script src="../js/atlas-settings.js"></script>
 <link rel="stylesheet" href="../css/global.css">
 <link rel="stylesheet" href="./atlas.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,40 +13,38 @@
 <body>
 <div class="atlas-shell">
 
-  <aside class="atlas-sidebar">
-    <div class="atlas-brand"><div class="atlas-brand-icon">◈</div><span>ATLAS</span></div>
-    <nav class="atlas-nav">
-      <a href="../dashboard/">🏠 <span>Dashboard</span></a>
-      <a href="../tools/budget-tracker/">💰 <span>Budget</span></a>
-      <a class="active" href="./">🤖 <span>Ask Atlas</span></a>
+  <header class="atlas-topbar">
+    <a class="atlas-back" href="../dashboard/" title="Back to Dashboard" aria-label="Back to Dashboard">←</a>
+    <a class="atlas-brand" href="../dashboard/"><span class="atlas-brand-icon">◈</span>Atlas</a>
+    <nav class="atlas-topnav">
+      <a href="../dashboard/">Dashboard</a>
+      <a href="../tools/budget-tracker/">Budget</a>
+      <a class="active" href="./">Ask Atlas</a>
     </nav>
-  </aside>
+    <button class="atlas-clear" id="clearBtn" type="button" title="Clear console">Clear</button>
+  </header>
 
-  <main class="atlas-main">
-    <header class="atlas-topbar">
-      <div>
-        <div class="atlas-eyebrow">Command console</div>
-        <h1 class="atlas-title">Ask Atlas</h1>
-        <p class="atlas-subtitle">Type a command, or just talk normally — Atlas understands a few phrasings.</p>
+  <main class="atlas-console" id="consoleLog" aria-live="polite">
+    <div class="log-row log-atlas">
+      <div class="log-bubble">
+        <p>Hi — I'm Atlas. Try <code>/expense 200 food lunch</code> or just say <em>"spent 200 on food"</em>. Type <code>/help</code> to see everything.</p>
       </div>
-    </header>
-
-    <section class="atlas-console" aria-live="polite" id="consoleLog">
-      <div class="log-entry log-system">
-        <div class="log-bubble">
-          <strong>Atlas</strong>
-          <p>Hi! Try <code>/expense 200 food lunch</code>, <code>/task buy milk</code>, or <code>/balance</code>. Type <code>/help</code> any time to see everything I understand.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="atlas-command">
-      <input id="commandInput" type="text" autocomplete="off" placeholder="Ask Atlas or enter a quick command…" aria-label="Ask Atlas">
-      <button id="commandButton" type="button">Send</button>
-    </section>
-
-    <div class="atlas-suggestions" id="suggestions"></div>
+    </div>
   </main>
+
+  <div class="atlas-inputbar">
+    <div class="atlas-chips" id="suggestions"></div>
+    <form class="atlas-composer" id="composer">
+      <input id="commandInput" type="text" autocomplete="off" inputmode="text" autofocus placeholder="Ask Atlas or type a command…" aria-label="Ask Atlas">
+      <button type="submit" id="commandButton" aria-label="Send">➔</button>
+    </form>
+  </div>
+
+  <nav class="atlas-mobile-bar">
+    <a href="../dashboard/"><span>🏠</span>Home</a>
+    <a href="../tools/budget-tracker/"><span>💰</span>Budget</a>
+    <a class="active" href="./"><span>🤖</span>Atlas</a>
+  </nav>
 </div>
 
 <script src="./atlas.js"></script>
