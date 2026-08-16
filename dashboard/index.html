@@ -21,6 +21,8 @@
     <link rel="stylesheet" href="widgets.css">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/atlas-auth.js"></script>
+    <script>atlasRequireAuth();</script>
     <script src="../js/supabase.js"></script>
     <script src="./dashboard.js" defer></script>
     <script src="./widgets.js" defer></script>
@@ -227,6 +229,11 @@
       <p class="settings-hint" id="connectionStatus">Not checked yet.</p>
       <button class="settings-action settings-action-danger" id="clearCache" type="button">Clear local cache</button>
       <p class="settings-hint">Removes locally saved transactions, tasks and notes on this device. Your Supabase data is not affected.</p>
+    </section>
+
+    <section class="settings-group">
+      <label class="settings-label">Account</label>
+      <button class="settings-action" id="signOutSettingsBtn" type="button">Sign out</button>
     </section>
 
   </div>

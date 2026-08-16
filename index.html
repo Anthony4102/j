@@ -6,6 +6,8 @@
 <meta name="description" content="Atlas — your personal daily assistant and command center.">
 <title>Atlas — Your Daily Assistant</title>
 <script src="./js/atlas-settings.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/atlas-auth.js"></script>
 <link rel="stylesheet" href="./css/global.css">
 <style>
 :root {
@@ -118,6 +120,85 @@ body {
 .secondary { background: var(--atlas-white); color: var(--atlas-text); border: 1px solid var(--atlas-border); }
 .secondary:hover { border-color: var(--atlas-primary); color: var(--atlas-primary); }
 
+/* auth panel */
+
+.auth-panel {
+    max-width: 380px;
+    margin: 40px auto 0;
+    background: var(--atlas-white);
+    border: 1px solid var(--atlas-border);
+    border-radius: var(--atlas-radius);
+    box-shadow: var(--atlas-shadow);
+    padding: 22px;
+    text-align: left;
+}
+
+.auth-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 12px;
+    background: var(--atlas-bg);
+    margin-bottom: 16px;
+}
+
+.auth-tab {
+    flex: 1;
+    border: none;
+    background: none;
+    padding: 9px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--atlas-muted);
+    cursor: pointer;
+}
+
+.auth-tab.active { background: var(--atlas-white); color: var(--atlas-primary); box-shadow: 0 2px 6px rgba(15,23,42,.08); }
+
+.auth-field {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 11px;
+    border: 1px solid var(--atlas-border);
+    background: var(--atlas-bg);
+    color: var(--atlas-text);
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.auth-field:focus { outline: none; border-color: var(--atlas-primary); background: var(--atlas-white); }
+
+.auth-submit {
+    width: 100%;
+    padding: 13px;
+    border-radius: 11px;
+    border: none;
+    background: var(--atlas-primary);
+    color: #fff;
+    font-weight: 750;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.auth-submit:hover { background: var(--atlas-primary-dark); }
+.auth-submit:disabled { opacity: .6; cursor: default; }
+
+.auth-message {
+    font-size: 12.5px;
+    margin-top: 10px;
+    min-height: 16px;
+    color: var(--atlas-muted);
+}
+
+.auth-message.error { color: #dc2626; }
+.auth-message.ok { color: #16a34a; }
+
+.auth-signedin {
+    display: none;
+    text-align: center;
+}
+
 /* signature element: a real preview of Ask Atlas, not decoration */
 .console-preview {
     max-width: 420px;
@@ -211,9 +292,26 @@ body {
 
 <p>Atlas is your personal command center — track your budget, log tasks and notes, and get answers in plain English, all synced to your own database.</p>
 
-<div class="buttons">
-<a class="btn primary" href="./dashboard/">Open Dashboard →</a>
-<a class="btn secondary" href="./atlas/">Try Ask Atlas</a>
+<div class="auth-panel" id="authPanel">
+  <div class="auth-tabs">
+    <button type="button" class="auth-tab active" data-tab="signin">Sign in</button>
+    <button type="button" class="auth-tab" data-tab="signup">Create account</button>
+  </div>
+  <form id="authForm">
+    <input class="auth-field" type="email" id="authEmail" placeholder="Email" autocomplete="email" required>
+    <input class="auth-field" type="password" id="authPassword" placeholder="Password" autocomplete="current-password" minlength="6" required>
+    <button class="auth-submit" type="submit" id="authSubmit">Sign in</button>
+  </form>
+  <p class="auth-message" id="authMessage"></p>
+</div>
+
+<div class="auth-signedin" id="signedInPanel">
+  <p style="color: var(--atlas-muted); font-size: 14px; margin-bottom: 16px;">Signed in as <strong id="signedInEmail"></strong></p>
+  <div class="buttons">
+    <a class="btn primary" href="./dashboard/">Open Dashboard →</a>
+    <a class="btn secondary" href="./atlas/">Try Ask Atlas</a>
+  </div>
+  <p style="margin-top: 14px;"><button type="button" id="signOutBtn" style="background:none;border:none;color:var(--atlas-muted);font-size:12.5px;cursor:pointer;text-decoration:underline;">Sign out</button></p>
 </div>
 
 <div class="console-preview">
@@ -233,5 +331,82 @@ body {
 
 </section>
 </main>
+
+<script>
+(async function initAuthUI() {
+  const authPanel = document.getElementById("authPanel");
+  const signedInPanel = document.getElementById("signedInPanel");
+  const emailEl = document.getElementById("signedInEmail");
+  const form = document.getElementById("authForm");
+  const emailInput = document.getElementById("authEmail");
+  const passwordInput = document.getElementById("authPassword");
+  const submitBtn = document.getElementById("authSubmit");
+  const messageEl = document.getElementById("authMessage");
+  const tabs = document.querySelectorAll(".auth-tab");
+  let mode = "signin";
+
+  function showMessage(text, kind) {
+    messageEl.textContent = text;
+    messageEl.className = "auth-message" + (kind ? " " + kind : "");
+  }
+
+  async function refreshAuthUI() {
+    const session = await atlasGetSession();
+    if (session) {
+      authPanel.style.display = "none";
+      signedInPanel.style.display = "block";
+      emailEl.textContent = session.user.email;
+
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get("next");
+      if (next) window.location.href = next;
+    } else {
+      authPanel.style.display = "block";
+      signedInPanel.style.display = "none";
+    }
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      mode = tab.dataset.tab;
+      submitBtn.textContent = mode === "signin" ? "Sign in" : "Create account";
+      passwordInput.autocomplete = mode === "signin" ? "current-password" : "new-password";
+      showMessage("");
+    });
+  });
+
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    showMessage("Working…");
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    try {
+      if (mode === "signin") {
+        const { error } = await atlasSignIn(email, password);
+        if (error) throw error;
+        showMessage("Signed in.", "ok");
+        await refreshAuthUI();
+      } else {
+        const { error } = await atlasSignUp(email, password);
+        if (error) throw error;
+        showMessage("Account created — check your email if confirmation is required, then sign in.", "ok");
+      }
+    } catch (err) {
+      showMessage(err.message || "Something went wrong.", "error");
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  document.getElementById("signOutBtn").addEventListener("click", atlasSignOut);
+
+  refreshAuthUI();
+})();
+</script>
 </body>
 </html>

@@ -139,7 +139,7 @@ async function saveStateToSupabase() {
         custom_lon: state.customLon,
         updated_at: new Date().toISOString()
       },
-      { onConflict: "setting_key" }
+      { onConflict: "setting_key,user_id" }
     );
   } catch (err) {
     console.warn("Trends panel: could not sync location to Supabase", err);

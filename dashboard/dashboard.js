@@ -138,6 +138,13 @@ function initSettingsPanel() {
     connStatus.textContent = "Local cache cleared.";
     location.reload();
   });
+
+  const signOutBtn = document.getElementById("signOutSettingsBtn");
+  if (signOutBtn) {
+    signOutBtn.addEventListener("click", () => {
+      if (confirm("Sign out of Atlas?")) atlasSignOut();
+    });
+  }
 }
 
 function applyHiddenTools(hiddenIds) {
