@@ -1,0 +1,240 @@
+/* =========================================================
+   TRENDS PANEL — News / Weather / YouTube / Social
+   Scoped entirely under .trends-panel so it stays a dark
+   "widget cluster" regardless of the site's light/dark mode.
+========================================================= */
+
+.trends-panel {
+    --tp-bg: #0b1220;
+    --tp-surface: #121b30;
+    --tp-surface-2: #182544;
+    --tp-border: #24304d;
+    --tp-text: #f1f5f9;
+    --tp-muted: #94a3b8;
+    --tp-accent: #6366f1;
+    --tp-accent-2: #22d3ee;
+    --tp-radius: 18px;
+
+    margin-top: 40px;
+    padding: 26px clamp(16px, 3vw, 30px) 30px;
+    border-radius: 22px;
+    background: var(--tp-bg);
+    color: var(--tp-text);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.trends-panel * { box-sizing: border-box; }
+
+.tp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.tp-eyebrow {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--tp-accent-2);
+    margin-bottom: 4px;
+}
+
+.tp-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -.4px;
+}
+
+.tp-toggle {
+    display: inline-flex;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--tp-surface);
+    border: 1px solid var(--tp-border);
+}
+
+.tp-toggle-btn {
+    border: none;
+    background: none;
+    color: var(--tp-muted);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease;
+}
+
+.tp-toggle-btn.active {
+    background: linear-gradient(135deg, var(--tp-accent), var(--tp-accent-2));
+    color: #fff;
+}
+
+.tp-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.tp-card {
+    background: var(--tp-surface);
+    border: 1px solid var(--tp-border);
+    border-radius: var(--tp-radius);
+    padding: 18px;
+    min-height: 220px;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.tp-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--tp-accent);
+    box-shadow: 0 12px 30px rgba(99, 102, 241, .18);
+}
+
+.tp-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.tp-card-head h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 750;
+    color: var(--tp-text);
+}
+
+.tp-select {
+    background: var(--tp-surface-2);
+    color: var(--tp-text);
+    border: 1px solid var(--tp-border);
+    border-radius: 9px;
+    padding: 6px 10px;
+    font-size: 12.5px;
+}
+
+.tp-loading {
+    color: var(--tp-muted);
+    font-size: 12.5px;
+    padding: 20px 0;
+    text-align: center;
+}
+
+/* weather */
+
+.tp-weather-body {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.tp-weather-icon { font-size: 42px; line-height: 1; }
+
+.tp-weather-temp {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+.tp-weather-desc {
+    color: var(--tp-muted);
+    font-size: 12.5px;
+    margin-top: 2px;
+}
+
+/* news list */
+
+.tp-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 210px;
+    overflow-y: auto;
+}
+
+.tp-list-item {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--tp-surface-2);
+    font-size: 12.5px;
+    line-height: 1.5;
+    text-decoration: none;
+    color: var(--tp-text);
+    display: block;
+    border: 1px solid transparent;
+}
+
+.tp-list-item:hover { border-color: var(--tp-accent); }
+.tp-list-item span { display: block; color: var(--tp-muted); font-size: 11px; margin-top: 3px; }
+
+/* youtube grid */
+
+.tp-yt-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 210px;
+    overflow-y: auto;
+}
+
+.tp-yt-item {
+    display: flex;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--tp-text);
+    padding: 6px;
+    border-radius: 10px;
+}
+
+.tp-yt-item:hover { background: var(--tp-surface-2); }
+
+.tp-yt-item img {
+    width: 64px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+    background: var(--tp-surface-2);
+}
+
+.tp-yt-title { font-size: 12px; font-weight: 650; line-height: 1.35; }
+.tp-yt-channel { font-size: 11px; color: var(--tp-muted); margin-top: 2px; }
+
+/* social tags */
+
+.tp-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-content: flex-start;
+}
+
+.tp-tag {
+    font-size: 12px;
+    font-weight: 650;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: var(--tp-surface-2);
+    border: 1px solid var(--tp-border);
+    color: var(--tp-accent-2);
+}
+
+/* responsive */
+
+@media (max-width: 1100px) {
+    .tp-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 620px) {
+    .tp-grid { grid-template-columns: 1fr; }
+    .tp-header { flex-direction: column; align-items: flex-start; }
+    .tp-toggle { align-self: stretch; }
+    .tp-toggle-btn { flex: 1; text-align: center; }
+}

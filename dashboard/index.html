@@ -18,10 +18,12 @@
 
     <link rel="stylesheet" href="../css/global.css">
     <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="widgets.css">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase.js"></script>
     <script src="./dashboard.js" defer></script>
+    <script src="./widgets.js" defer></script>
 </head>
 <body>
 <div class="atlas-shell">
@@ -98,6 +100,49 @@
     <button id="commandButton" type="button">Ask Atlas</button>
   </section>
   <p class="atlas-note">Atlas v1: the dashboard is connected to the same Budget Tracker data when available. AI commands will be added after the core tools are organized.</p>
+
+  <section class="trends-panel" id="trendsPanel">
+    <header class="tp-header">
+      <div>
+        <div class="tp-eyebrow">Live feed</div>
+        <h2>News, Weather & Trends</h2>
+      </div>
+      <div class="tp-toggle" id="locationToggle" role="group" aria-label="Location mode">
+        <button type="button" class="tp-toggle-btn active" data-mode="PH">🇵🇭 Philippines</button>
+        <button type="button" class="tp-toggle-btn" data-mode="INTL">🌐 International</button>
+      </div>
+    </header>
+
+    <div class="tp-grid">
+
+      <article class="tp-card tp-weather">
+        <div class="tp-card-head">
+          <h3>Weather</h3>
+          <select id="citySelect" class="tp-select" aria-label="City"></select>
+        </div>
+        <div class="tp-weather-body" id="weatherBody">
+          <div class="tp-loading">Loading weather…</div>
+        </div>
+      </article>
+
+      <article class="tp-card tp-news">
+        <div class="tp-card-head"><h3>Top Headlines</h3></div>
+        <div class="tp-list" id="newsList"><div class="tp-loading">Loading headlines…</div></div>
+      </article>
+
+      <article class="tp-card tp-youtube">
+        <div class="tp-card-head"><h3>Trending on YouTube</h3></div>
+        <div class="tp-yt-grid" id="youtubeList"><div class="tp-loading">Loading trends…</div></div>
+      </article>
+
+      <article class="tp-card tp-social">
+        <div class="tp-card-head"><h3>Social & Web Trends</h3></div>
+        <div class="tp-tags" id="socialList"><div class="tp-loading">Loading trends…</div></div>
+      </article>
+
+    </div>
+  </section>
+
   <footer class="atlas-footer">Atlas — your personal daily assistant.</footer>
 </main>
 <nav class="atlas-mobile-bar">
