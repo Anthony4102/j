@@ -107,9 +107,20 @@
         <div class="tp-eyebrow">Live feed</div>
         <h2>News, Weather & Trends</h2>
       </div>
-      <div class="tp-toggle" id="locationToggle" role="group" aria-label="Location mode">
-        <button type="button" class="tp-toggle-btn active" data-mode="PH">🇵🇭 Philippines</button>
-        <button type="button" class="tp-toggle-btn" data-mode="INTL">🌐 International</button>
+      <div class="tp-controls">
+        <div class="tp-toggle" id="locationToggle" role="group" aria-label="Location mode">
+          <button type="button" class="tp-toggle-btn active" data-mode="PH">🇵🇭 Philippines</button>
+          <button type="button" class="tp-toggle-btn" data-mode="INTL">🌐 International</button>
+        </div>
+        <div class="tp-count">
+          <label for="itemCountSelect">Show</label>
+          <select id="itemCountSelect" class="tp-select">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+          </select>
+        </div>
       </div>
     </header>
 
@@ -120,6 +131,11 @@
           <h3>Weather</h3>
           <select id="citySelect" class="tp-select" aria-label="City"></select>
         </div>
+        <div class="tp-custom-city" id="customCityRow" hidden>
+          <input type="text" id="customCityInput" class="tp-select" placeholder="Search any city…" autocomplete="off">
+          <button type="button" id="customCitySearch" class="tp-search-btn">Search</button>
+        </div>
+        <p class="tp-custom-hint" id="customCityHint" hidden></p>
         <div class="tp-weather-body" id="weatherBody">
           <div class="tp-loading">Loading weather…</div>
         </div>
@@ -131,7 +147,19 @@
       </article>
 
       <article class="tp-card tp-youtube">
-        <div class="tp-card-head"><h3>Trending on YouTube</h3></div>
+        <div class="tp-card-head">
+          <h3>Trending on YouTube</h3>
+          <select id="ytCategorySelect" class="tp-select" aria-label="YouTube category">
+            <option value="">All</option>
+            <option value="10">Music</option>
+            <option value="20">Gaming</option>
+            <option value="17">Sports</option>
+            <option value="24">Entertainment</option>
+            <option value="25">News & Politics</option>
+            <option value="28">Science & Tech</option>
+            <option value="1">Film & Animation</option>
+          </select>
+        </div>
         <div class="tp-yt-grid" id="youtubeList"><div class="tp-loading">Loading trends…</div></div>
       </article>
 

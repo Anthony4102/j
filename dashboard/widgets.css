@@ -58,6 +58,13 @@
     border: 1px solid var(--tp-border);
 }
 
+.tp-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
 .tp-toggle-btn {
     border: none;
     background: none;
@@ -73,6 +80,15 @@
 .tp-toggle-btn.active {
     background: linear-gradient(135deg, var(--tp-accent), var(--tp-accent-2));
     color: #fff;
+}
+
+.tp-count {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 650;
+    color: var(--tp-muted);
 }
 
 .tp-grid {
@@ -118,6 +134,34 @@
     border-radius: 9px;
     padding: 6px 10px;
     font-size: 12.5px;
+}
+
+.tp-custom-city {
+    display: flex;
+    gap: 6px;
+    margin: -6px 0 12px;
+}
+
+.tp-custom-city input { flex: 1; }
+
+.tp-search-btn {
+    border: 1px solid var(--tp-border);
+    background: var(--tp-accent);
+    color: #fff;
+    border-radius: 9px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.tp-search-btn:hover { background: var(--tp-accent-2); }
+
+.tp-custom-hint {
+    font-size: 11.5px;
+    color: var(--tp-muted);
+    margin: -6px 0 12px;
 }
 
 .tp-loading {

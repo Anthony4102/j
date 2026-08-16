@@ -17,8 +17,17 @@
      setting_key text not null unique,
      location_mode text not null default 'PH',
      city text not null default 'Manila',
+     item_count integer not null default 10,
+     yt_category text not null default '',
      updated_at timestamptz not null default now()
    );
+
+   If you already created the table before this update, run:
+   alter table user_settings add column if not exists item_count integer not null default 10;
+   alter table user_settings add column if not exists yt_category text not null default '';
+   alter table user_settings add column if not exists is_custom_city boolean not null default false;
+   alter table user_settings add column if not exists custom_lat double precision;
+   alter table user_settings add column if not exists custom_lon double precision;
 ========================================================= */
 
 const NEWS_API_KEY = "";     // https://newsapi.org
@@ -30,11 +39,13 @@ const CITY_OPTIONS = {
   PH:   [{ name: "Manila", lat: 14.5995, lon: 120.9842 },
          { name: "Quezon City", lat: 14.6760, lon: 121.0437 },
          { name: "Cebu", lat: 10.3157, lon: 123.8854 },
-         { name: "Davao", lat: 7.1907, lon: 125.4553 }],
+         { name: "Davao", lat: 7.1907, lon: 125.4553 },
+         { name: "Marinduque", lat: 13.4771, lon: 121.9032 }],
   INTL: [{ name: "Tokyo", lat: 35.6762, lon: 139.6503 },
          { name: "New York", lat: 40.7128, lon: -74.0060 },
          { name: "London", lat: 51.5072, lon: -0.1276 },
-         { name: "Singapore", lat: 1.3521, lon: 103.8198 }]
+         { name: "Singapore", lat: 1.3521, lon: 103.8198 },
+         { name: "Jeddah", lat: 21.4858, lon: 39.1925 }]
 };
 
 const WEATHER_CODES = {
@@ -47,21 +58,33 @@ const WEATHER_CODES = {
   95: ["⛈️", "Thunderstorm"], 96: ["⛈️", "Thunderstorm + hail"], 99: ["⛈️", "Severe thunderstorm"]
 };
 
-let atlasSupabase = null;
-try { atlasSupabase = typeof getAtlasSupabase === "function" ? getAtlasSupabase() : null; } catch { atlasSupabase = null; }
+let atlasWidgetsClient = null;
+try { atlasWidgetsClient = typeof getAtlasSupabase === "function" ? getAtlasSupabase() : null; } catch { atlasWidgetsClient = null; }
 
-let state = { mode: "PH", city: "Manila" };
+let state = { mode: "PH", city: "Manila", itemCount: 10, ytCategory: "", isCustomCity: false, customLat: null, customLon: null };
 
 document.addEventListener("DOMContentLoaded", async () => {
   loadStateFromLocalStorage();
   await loadStateFromSupabase();   // Supabase wins if it has a value, keeps devices in sync
   renderToggle();
   renderCityOptions();
+  renderControlValues();
   refreshAll();
 
   document.getElementById("locationToggle").addEventListener("click", onToggleClick);
   document.getElementById("citySelect").addEventListener("change", onCityChange);
+  document.getElementById("itemCountSelect").addEventListener("change", onItemCountChange);
+  document.getElementById("ytCategorySelect").addEventListener("change", onYtCategoryChange);
+  document.getElementById("customCitySearch").addEventListener("click", onCustomCitySearch);
+  document.getElementById("customCityInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") onCustomCitySearch();
+  });
 });
+
+function renderControlValues() {
+  document.getElementById("itemCountSelect").value = String(state.itemCount);
+  document.getElementById("ytCategorySelect").value = state.ytCategory;
+}
 
 /* ---------------- state + sync ---------------- */
 
@@ -77,15 +100,23 @@ function saveStateToLocalStorage() {
 }
 
 async function loadStateFromSupabase() {
-  if (!atlasSupabase) return;
+  if (!atlasWidgetsClient) return;
   try {
-    const { data, error } = await atlasSupabase
+    const { data, error } = await atlasWidgetsClient
       .from("user_settings")
-      .select("location_mode, city")
+      .select("location_mode, city, item_count, yt_category, is_custom_city, custom_lat, custom_lon")
       .eq("setting_key", SETTINGS_ROW_KEY)
       .maybeSingle();
     if (!error && data) {
-      state = { mode: data.location_mode, city: data.city };
+      state = {
+        mode: data.location_mode ?? state.mode,
+        city: data.city ?? state.city,
+        itemCount: data.item_count ?? state.itemCount,
+        ytCategory: data.yt_category ?? state.ytCategory,
+        isCustomCity: data.is_custom_city ?? false,
+        customLat: data.custom_lat ?? null,
+        customLon: data.custom_lon ?? null
+      };
       saveStateToLocalStorage();
     }
   } catch (err) {
@@ -94,10 +125,20 @@ async function loadStateFromSupabase() {
 }
 
 async function saveStateToSupabase() {
-  if (!atlasSupabase) return;
+  if (!atlasWidgetsClient) return;
   try {
-    await atlasSupabase.from("user_settings").upsert(
-      { setting_key: SETTINGS_ROW_KEY, location_mode: state.mode, city: state.city, updated_at: new Date().toISOString() },
+    await atlasWidgetsClient.from("user_settings").upsert(
+      {
+        setting_key: SETTINGS_ROW_KEY,
+        location_mode: state.mode,
+        city: state.city,
+        item_count: state.itemCount,
+        yt_category: state.ytCategory,
+        is_custom_city: state.isCustomCity,
+        custom_lat: state.customLat,
+        custom_lon: state.customLon,
+        updated_at: new Date().toISOString()
+      },
       { onConflict: "setting_key" }
     );
   } catch (err) {
@@ -114,6 +155,9 @@ function onToggleClick(e) {
   if (mode === state.mode) return;
   state.mode = mode;
   state.city = CITY_OPTIONS[mode][0].name;
+  state.isCustomCity = false;
+  state.customLat = null;
+  state.customLon = null;
   saveStateToLocalStorage();
   saveStateToSupabase();
   renderToggle();
@@ -122,10 +166,74 @@ function onToggleClick(e) {
 }
 
 function onCityChange(e) {
+  if (e.target.value === "__search__") {
+    document.getElementById("customCityRow").hidden = false;
+    document.getElementById("customCityInput").focus();
+    // put the select back on the currently active city so weather doesn't break
+    renderCityOptions();
+    return;
+  }
   state.city = e.target.value;
+  state.isCustomCity = false;
+  state.customLat = null;
+  state.customLon = null;
   saveStateToLocalStorage();
   saveStateToSupabase();
   loadWeather();
+}
+
+async function onCustomCitySearch() {
+  const input = document.getElementById("customCityInput");
+  const hint = document.getElementById("customCityHint");
+  const query = input.value.trim();
+  if (!query) return;
+
+  hint.hidden = false;
+  hint.textContent = "Searching…";
+
+  try {
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("geocoding failed");
+    const data = await res.json();
+    const match = (data.results || [])[0];
+    if (!match) {
+      hint.textContent = `Couldn't find "${query}". Try a different spelling.`;
+      return;
+    }
+
+    state.city = match.admin1 ? `${match.name}, ${match.admin1}` : `${match.name}, ${match.country}`;
+    state.isCustomCity = true;
+    state.customLat = match.latitude;
+    state.customLon = match.longitude;
+    saveStateToLocalStorage();
+    saveStateToSupabase();
+
+    document.getElementById("customCityRow").hidden = true;
+    input.value = "";
+    hint.hidden = true;
+    renderCityOptions();
+    loadWeather();
+  } catch (err) {
+    console.warn("Geocoding search failed:", err);
+    hint.textContent = "Search failed — check your connection and try again.";
+  }
+}
+
+function onItemCountChange(e) {
+  state.itemCount = parseInt(e.target.value, 10) || 10;
+  saveStateToLocalStorage();
+  saveStateToSupabase();
+  loadNews();
+  loadYouTubeTrends();
+  loadSocialTrends();
+}
+
+function onYtCategoryChange(e) {
+  state.ytCategory = e.target.value;
+  saveStateToLocalStorage();
+  saveStateToSupabase();
+  loadYouTubeTrends();
 }
 
 function renderToggle() {
@@ -137,14 +245,29 @@ function renderToggle() {
 function renderCityOptions() {
   const select = document.getElementById("citySelect");
   select.innerHTML = "";
+
+  if (state.isCustomCity && state.city) {
+    const custom = document.createElement("option");
+    custom.value = state.city;
+    custom.textContent = `📍 ${state.city}`;
+    custom.selected = true;
+    select.appendChild(custom);
+  }
+
   CITY_OPTIONS[state.mode].forEach(c => {
     const opt = document.createElement("option");
     opt.value = c.name;
     opt.textContent = c.name;
-    if (c.name === state.city) opt.selected = true;
+    if (!state.isCustomCity && c.name === state.city) opt.selected = true;
     select.appendChild(opt);
   });
-  if (!CITY_OPTIONS[state.mode].find(c => c.name === state.city)) {
+
+  const search = document.createElement("option");
+  search.value = "__search__";
+  search.textContent = "🔍 Other location…";
+  select.appendChild(search);
+
+  if (!state.isCustomCity && !CITY_OPTIONS[state.mode].find(c => c.name === state.city)) {
     state.city = CITY_OPTIONS[state.mode][0].name;
   }
 }
@@ -162,7 +285,9 @@ async function loadWeather() {
   const body = document.getElementById("weatherBody");
   body.innerHTML = `<div class="tp-loading">Loading weather…</div>`;
 
-  const city = CITY_OPTIONS[state.mode].find(c => c.name === state.city) || CITY_OPTIONS[state.mode][0];
+  const city = state.isCustomCity
+    ? { name: state.city, lat: state.customLat, lon: state.customLon }
+    : (CITY_OPTIONS[state.mode].find(c => c.name === state.city) || CITY_OPTIONS[state.mode][0]);
 
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current_weather=true`;
@@ -209,20 +334,20 @@ async function loadNews() {
   list.innerHTML = `<div class="tp-loading">Loading headlines…</div>`;
 
   if (!NEWS_API_KEY) {
-    renderNews(MOCK_NEWS[state.mode]);
+    renderNews(MOCK_NEWS[state.mode].slice(0, state.itemCount));
     return;
   }
 
   try {
     const query = state.mode === "PH" ? "country=ph" : "category=world&language=en";
-    const url = `https://newsapi.org/v2/top-headlines?${query}&apiKey=${NEWS_API_KEY}`;
+    const url = `https://newsapi.org/v2/top-headlines?${query}&pageSize=${state.itemCount}&apiKey=${NEWS_API_KEY}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error("news fetch failed");
     const data = await res.json();
-    renderNews((data.articles || []).slice(0, 6).map(a => ({ title: a.title, source: a.source?.name, url: a.url })));
+    renderNews((data.articles || []).slice(0, state.itemCount).map(a => ({ title: a.title, source: a.source?.name, url: a.url })));
   } catch (err) {
     console.warn("News fetch failed, using fallback:", err);
-    renderNews(MOCK_NEWS[state.mode]);
+    renderNews(MOCK_NEWS[state.mode].slice(0, state.itemCount));
   }
 }
 
@@ -254,13 +379,14 @@ async function loadYouTubeTrends() {
   list.innerHTML = `<div class="tp-loading">Loading trends…</div>`;
 
   if (!YOUTUBE_API_KEY) {
-    renderYouTube(MOCK_YOUTUBE[state.mode]);
+    renderYouTube(MOCK_YOUTUBE[state.mode].slice(0, state.itemCount));
     return;
   }
 
   try {
     const region = state.mode === "PH" ? "PH" : "US";
-    const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&regionCode=${region}&maxResults=6&key=${YOUTUBE_API_KEY}`;
+    const categoryParam = state.ytCategory ? `&videoCategoryId=${state.ytCategory}` : "";
+    const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&regionCode=${region}${categoryParam}&maxResults=${state.itemCount}&key=${YOUTUBE_API_KEY}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error("youtube fetch failed");
     const data = await res.json();
@@ -272,7 +398,7 @@ async function loadYouTubeTrends() {
     })));
   } catch (err) {
     console.warn("YouTube fetch failed, using fallback:", err);
-    renderYouTube(MOCK_YOUTUBE[state.mode]);
+    renderYouTube(MOCK_YOUTUBE[state.mode].slice(0, state.itemCount));
   }
 }
 
@@ -301,7 +427,7 @@ async function loadSocialTrends() {
   // No stable free/keyless API for this exists yet — kept as curated mock data,
   // structured so a real source (e.g. a trends API) can replace MOCK_SOCIAL later.
   await new Promise(r => setTimeout(r, 200));
-  list.innerHTML = MOCK_SOCIAL[state.mode].map(tag => `<span class="tp-tag">${escapeHtml(tag)}</span>`).join("");
+  list.innerHTML = MOCK_SOCIAL[state.mode].slice(0, state.itemCount).map(tag => `<span class="tp-tag">${escapeHtml(tag)}</span>`).join("");
 }
 
 /* ---------------- utils ---------------- */
