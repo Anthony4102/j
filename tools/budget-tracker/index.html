@@ -725,6 +725,14 @@
 
 
 
+            <!-- BULK ACTIONS -->
+
+            <div class="bulk-actions-bar" id="bulkActionsBar" hidden>
+                <span id="bulkSelectedCount">0 selected</span>
+                <button type="button" class="btn-gray" onclick="toggleSelectAllTransactions(false)">Clear</button>
+                <button type="button" class="delete-btn" onclick="deleteSelectedTransactions()">Delete selected</button>
+            </div>
+
             <!-- TABLE -->
 
             <div class="table-wrapper">
@@ -734,6 +742,15 @@
                     <thead>
 
                         <tr>
+
+                            <th style="width:36px;">
+                                <input
+                                    type="checkbox"
+                                    id="selectAllCheckbox"
+                                    onchange="toggleSelectAllTransactions(this.checked)"
+                                    aria-label="Select all transactions"
+                                >
+                            </th>
 
                             <th>
 
@@ -795,7 +812,7 @@
                         <tr>
 
                             <td
-                                colspan="7"
+                                colspan="8"
                                 class="loading-cell"
                             >
                                 Loading transactions...

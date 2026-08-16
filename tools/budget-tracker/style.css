@@ -2504,3 +2504,41 @@ table {
         padding-bottom: 90px;
     }
 }
+
+
+/* =========================================================
+   ROW SELECTION / BULK ACTIONS
+   Appended, doesn't touch existing rules above.
+========================================================= */
+
+#selectAllCheckbox,
+.row-select-checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.bulk-actions-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--purple-light);
+    border: 1px solid #ddd6fe;
+    border-radius: var(--radius-small);
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.bulk-actions-bar button {
+    min-height: 36px;
+}
+
+@media (max-width: 650px) {
+    .bulk-actions-bar {
+        flex-wrap: wrap;
+    }
+}

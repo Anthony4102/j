@@ -102,6 +102,8 @@ const STORAGE_KEYS = {
 
 let transactions = [];
 
+let selectedTransactionIds = new Set();
+
 let budgets = {
     ...DEFAULT_BUDGETS
 };
@@ -1407,6 +1409,78 @@ async function deleteTransaction(
 
 
 /* =========================================================
+   ROW SELECTION / BULK ACTIONS
+========================================================= */
+
+function toggleSelectAllTransactions(checked) {
+    if (checked) {
+        document.querySelectorAll(".row-select-checkbox").forEach(cb => {
+            selectedTransactionIds.add(cb.dataset.id);
+        });
+    } else {
+        selectedTransactionIds.clear();
+    }
+    renderTransactions();
+}
+
+function toggleTransactionSelection(id, checked) {
+    if (checked) {
+        selectedTransactionIds.add(String(id));
+    } else {
+        selectedTransactionIds.delete(String(id));
+    }
+
+    updateBulkActionsBar();
+
+    const selectAll = document.getElementById("selectAllCheckbox");
+    if (selectAll) {
+        const rowBoxes = document.querySelectorAll(".row-select-checkbox");
+        selectAll.checked = rowBoxes.length > 0 && Array.from(rowBoxes).every(cb => cb.checked);
+    }
+}
+
+function updateBulkActionsBar() {
+    const bar = document.getElementById("bulkActionsBar");
+    const countEl = document.getElementById("bulkSelectedCount");
+    if (!bar || !countEl) return;
+
+    const count = selectedTransactionIds.size;
+    bar.hidden = count === 0;
+    countEl.textContent = `${count} selected`;
+}
+
+async function deleteSelectedTransactions() {
+    const ids = Array.from(selectedTransactionIds);
+    if (!ids.length) return;
+
+    const confirmed = window.confirm(
+        `Delete ${ids.length} selected transaction${ids.length === 1 ? "" : "s"}? This can't be undone.`
+    );
+    if (!confirmed) return;
+
+    try {
+        if (supabaseClient) {
+            const { error } = await supabaseClient.from("transactions").delete().in("id", ids);
+            if (error) {
+                console.error("Bulk delete error:", error);
+                showToast(error.message || "Failed to delete selected transactions.");
+                return;
+            }
+        }
+
+        transactions = transactions.filter(t => !ids.includes(String(t.id)));
+        selectedTransactionIds.clear();
+        saveLocalData();
+        render();
+        showToast("Selected transactions deleted.");
+    } catch (error) {
+        console.error("Unexpected bulk delete error:", error);
+        showToast("Something went wrong.");
+    }
+}
+
+
+/* =========================================================
    PERIOD TRANSACTIONS
 ========================================================= */
 
@@ -2217,6 +2291,17 @@ function renderTransactions() {
                         <tr>
 
                             <td>
+                                <input
+                                    type="checkbox"
+                                    class="row-select-checkbox"
+                                    data-id="${id}"
+                                    ${selectedTransactionIds.has(String(t.id)) ? "checked" : ""}
+                                    onchange="toggleTransactionSelection('${id}', this.checked)"
+                                    aria-label="Select transaction"
+                                >
+                            </td>
+
+                            <td>
                                 ${formatDate(
                                     t.date
                                 )}
@@ -2337,12 +2422,16 @@ function renderTransactions() {
 
                                 <button
                                     type="button"
+                                    class="btn-gray"
+                                    onclick="editTransaction('${id}')"
+                                >
+                                    Edit
+                                </button>
+
+                                <button
+                                    type="button"
                                     class="delete-btn"
-                                    onclick="deleteTransaction(${JSON.stringify(
-                                        String(
-                                            t.id
-                                        )
-                                    )})"
+                                    onclick="deleteTransaction('${id}')"
                                 >
                                     Delete
                                 </button>
@@ -2355,6 +2444,8 @@ function renderTransactions() {
                 }
             )
             .join("");
+
+    updateBulkActionsBar();
 }
 
 
@@ -4789,6 +4880,8 @@ async function deleteTransaction(id) {
                 );
 
 
+            selectedTransactionIds.delete(String(id));
+
             saveLocalData();
 
             render();
@@ -4841,6 +4934,7 @@ async function deleteTransaction(id) {
                     String(id)
             );
 
+        selectedTransactionIds.delete(String(id));
 
         saveLocalData();
 
