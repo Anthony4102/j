@@ -6,17 +6,15 @@
    call the same functions as "tools".
 ========================================================= */
 
-const SUPABASE_URL = "https://wmedotwgqrsgrhjdzbbn.supabase.co";
-const SUPABASE_KEY = "sb_publishable_6NI-3Sg2gv0NSEm7mBddHw_kNi2sg-f";
+/* Atlas auth (atlas-auth.js, loaded before this file) already created
+   ONE Supabase client for the whole page. Reusing it here — instead of
+   creating a second client — is what keeps commands actually
+   authenticated against your Supabase data. */
+const supabaseClient = typeof atlasAuthClient !== "undefined" ? atlasAuthClient : null;
+if (!supabaseClient) console.warn("Atlas: no shared Supabase client found — falling back to localStorage only.");
 
 const CATEGORIES = ["Bill", "Essential", "Savings", "Credit Card", "Non-Essential", "Extra"];
-
-let supabaseClient = null;
-try {
-  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-} catch (e) {
-  console.warn("Atlas: could not init Supabase, falling back to localStorage only.", e);
-}
+const ACCOUNTS = ["Cash", "Bank", "GCash", "Maya", "Credit Card", "Other"];
 
 const logEl = document.getElementById("consoleLog");
 const inputEl = document.getElementById("commandInput");
@@ -25,8 +23,8 @@ const suggestionsEl = document.getElementById("suggestions");
 const clearBtn = document.getElementById("clearBtn");
 
 const SUGGESTIONS = [
-  "/expense 200 food", "/income 500 salary", "/balance", "/today", "/week",
-  "/task buy milk", "/tasks", "/done buy milk", "/note", "/help"
+  "/expense 200 food", "/income 500 salary", "/balance", "/undo",
+  "/task buy milk", "/tasks", "/note", "/deletenote", "/help"
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -63,6 +61,20 @@ async function handleSubmit() {
   if (/^\/delete\b/i.test(raw)) {
     const target = raw.replace(/^\/delete\s*/i, "");
     if (!confirm(`Delete the task matching "${target}"? This can't be undone.`)) return;
+  }
+  if (/^\/removetx\b/i.test(raw)) {
+    const target = raw.replace(/^\/removetx\s*/i, "");
+    if (!confirm(`Delete the transaction matching "${target}"? This can't be undone.`)) return;
+  }
+  if (/^\/undo\b/i.test(raw)) {
+    if (!confirm("Undo your most recently added transaction? This can't be undone.")) return;
+  }
+  if (/^\/deletenote\b/i.test(raw)) {
+    const target = raw.replace(/^\/deletenote\s*/i, "");
+    if (!confirm(`Delete the note matching "${target}"? This can't be undone.`)) return;
+  }
+  if (/^\/cleartasks\b/i.test(raw)) {
+    if (!confirm("Clear all completed tasks? This can't be undone.")) return;
   }
 
   appendLog("user", escapeHtml(raw));
@@ -119,6 +131,10 @@ async function routeCommand(raw) {
   if (/^(what'?s|whats|check)?\s*my balance\??$/.test(lower) || lower === "balance") return runCommand("balance", "");
   if (/^(how much (did i|have i) spent? today|today'?s (spend|expenses|summary))\??$/.test(lower)) return runCommand("today", "");
   if (/^(this week|weekly summary|how'?s? my week)\??$/.test(lower)) return runCommand("week", "");
+  if (/^(undo|undo that|undo last( transaction)?)\??$/.test(lower)) return runCommand("undo", "");
+
+  m = lower.match(/^(remove|delete) (transaction|expense|income)\s+(.*)$/);
+  if (m) return runCommand("removetx", m[3]);
 
   m = lower.match(/^(add task|remind me to|todo)\s+(.*)$/);
   if (m) return runCommand("task", m[2]);
@@ -130,6 +146,9 @@ async function routeCommand(raw) {
 
   m = lower.match(/^note\s*(:|that)?\s*(.*)$/);
   if (m && m[2]) return runCommand("note", m[2]);
+
+  m = lower.match(/^(delete note|remove note)\s+(.*)$/);
+  if (m) return runCommand("deletenote", m[2]);
 
   return {
     ok: false,
@@ -145,6 +164,8 @@ async function runCommand(cmd, args) {
     case "today":      return getSummary(1);
     case "week":       return getSummary(7);
     case "categories": return getCategoryBreakdown();
+    case "removetx":   return removeTransaction(args);
+    case "undo":       return undoLastTransaction();
     case "task":       return addTask(args);
     case "tasks":      return listTasks();
     case "done":       return completeTask(args, true);
@@ -152,6 +173,8 @@ async function runCommand(cmd, args) {
     case "delete":     return deleteTask(args);
     case "note":       return addNote(args);
     case "notes":      return listNotes();
+    case "deletenote": return deleteNote(args);
+    case "cleartasks": return clearCompletedTasks();
     case "clear":
       logEl.innerHTML = "";
       return { ok: true, message: "Console cleared." };
@@ -172,27 +195,37 @@ async function addTransaction(type, args) {
   const amount = parseFloat(match[1]);
   const rest = match[3].trim();
   const foundCategory = CATEGORIES.find(c => rest.toLowerCase().includes(c.toLowerCase()));
+  const foundAccount = ACCOUNTS.find(a => rest.toLowerCase().includes(a.toLowerCase()));
   const description = rest || (type === "expense" ? "Expense" : "Income");
   const today = new Date().toISOString().slice(0, 10);
 
   const row = {
     transaction_date: today, description, amount,
-    transaction_type: type, category: foundCategory || null, account: null, notes: null
+    transaction_type: type, category: foundCategory || "Extra", account: foundAccount || "Cash", notes: null
   };
 
   if (supabaseClient) {
     const { error } = await supabaseClient.from("transactions").insert(row);
     if (error) {
       console.error(error);
+      if (isAuthError(error)) {
+        return { ok: false, message: `Couldn't save — you may be signed out. Try refreshing the page and signing in again. (${escapeHtml(error.message)})` };
+      }
       saveLocalTransaction(row);
-      return { ok: true, message: `Couldn't reach Supabase, saved locally instead. Logged ${type === "expense" ? "−" : "+"}${peso(amount)} — <strong>${escapeHtml(description)}</strong>.` };
+      return { ok: true, message: `Couldn't save to Supabase (${escapeHtml(error.message)}) — saved locally instead. Logged ${type === "expense" ? "−" : "+"}${peso(amount)} — <strong>${escapeHtml(description)}</strong>.` };
     }
   } else {
     saveLocalTransaction(row);
   }
 
   const sign = type === "expense" ? "−" : "+";
-  return { ok: true, message: `Logged ${sign}${peso(amount)} — <strong>${escapeHtml(description)}</strong>${foundCategory ? ` (${foundCategory})` : ""}.` };
+  const tags = [foundCategory, foundAccount].filter(Boolean).join(" · ");
+  return { ok: true, message: `Logged ${sign}${peso(amount)} — <strong>${escapeHtml(description)}</strong>${tags ? ` (${tags})` : ""}.` };
+}
+
+function isAuthError(error) {
+  const msg = (error?.message || "").toLowerCase();
+  return msg.includes("row-level security") || msg.includes("permission denied") || msg.includes("jwt") || error?.code === "42501";
 }
 
 function saveLocalTransaction(row) {
@@ -393,6 +426,44 @@ function getLocalNotes() {
 }
 function setLocalNotes(list) { localStorage.setItem("atlas_notes", JSON.stringify(list)); }
 
+async function deleteNote(fragment) {
+  fragment = fragment.trim().toLowerCase();
+  if (!fragment) return { ok: false, message: `Tell me which note, e.g. <code>/deletenote landlord</code>.` };
+
+  if (supabaseClient) {
+    const { data } = await supabaseClient.from("atlas_notes").select("*");
+    const match = (data || []).find(n => n.content.toLowerCase().includes(fragment));
+    if (match) {
+      const { error } = await supabaseClient.from("atlas_notes").delete().eq("id", match.id);
+      if (!error) return { ok: true, message: `Deleted note: <em>${escapeHtml(match.content)}</em>` };
+    }
+  }
+  const list = getLocalNotes();
+  const idx = list.findIndex(n => n.content.toLowerCase().includes(fragment));
+  if (idx >= 0) {
+    const [removed] = list.splice(idx, 1);
+    setLocalNotes(list);
+    return { ok: true, message: `Deleted note: <em>${escapeHtml(removed.content)}</em>` };
+  }
+  return { ok: false, message: `Couldn't find a note matching "${escapeHtml(fragment)}".` };
+}
+
+async function clearCompletedTasks() {
+  let count = 0;
+  if (supabaseClient) {
+    const { data } = await supabaseClient.from("atlas_tasks").select("id").eq("done", true);
+    if (data && data.length) {
+      const { error } = await supabaseClient.from("atlas_tasks").delete().eq("done", true);
+      if (!error) count += data.length;
+    }
+  }
+  const list = getLocalTasks();
+  const remaining = list.filter(t => !t.done);
+  count += list.length - remaining.length;
+  setLocalTasks(remaining);
+  return { ok: true, message: count ? `Cleared ${count} completed task${count === 1 ? "" : "s"}.` : "No completed tasks to clear." };
+}
+
 /* =========================================================
    HELP + UTILITIES
 ========================================================= */
@@ -402,14 +473,17 @@ function help() {
     ok: true,
     message: `<strong>Money</strong><br>
       <code>/expense 200 food lunch</code> · <code>/income 500 salary</code><br>
-      <code>/balance</code> · <code>/today</code> · <code>/week</code> · <code>/categories</code><br><br>
+      <code>/balance</code> · <code>/today</code> · <code>/week</code> · <code>/categories</code><br>
+      <code>/undo</code> — delete your most recent transaction<br>
+      <code>/removetx groceries</code> — delete a transaction by description<br><br>
       <strong>Tasks</strong><br>
-      <code>/task buy milk</code> · <code>/tasks</code> · <code>/done buy milk</code> · <code>/undone buy milk</code> · <code>/delete buy milk</code><br><br>
+      <code>/task buy milk</code> · <code>/tasks</code> · <code>/done buy milk</code> · <code>/undone buy milk</code><br>
+      <code>/delete buy milk</code> — delete a task · <code>/cleartasks</code> — clear all completed<br><br>
       <strong>Notes</strong><br>
-      <code>/note call landlord</code> · <code>/notes</code><br><br>
+      <code>/note call landlord</code> · <code>/notes</code> · <code>/deletenote landlord</code><br><br>
       <strong>Other</strong><br>
       <code>/clear</code> — clear this console<br><br>
-      Natural phrasing also works: "spent 200 on food", "add task buy milk", "what's my balance".`
+      Natural phrasing also works: "spent 200 on food", "undo", "delete note landlord".`
   };
 }
 

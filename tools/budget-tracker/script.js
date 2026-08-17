@@ -241,11 +241,17 @@ function initializeSupabase() {
 
     try {
 
+        // Reuse the one authenticated client atlas-auth.js already created
+        // for this page (via atlasRequireAuth()), instead of creating a
+        // second, unauthenticated instance — this is what lets Row Level
+        // Security actually see who's logged in.
         supabaseClient =
-            window.supabase.createClient(
-                SUPABASE_URL,
-                SUPABASE_KEY
-            );
+            (typeof atlasAuthClient !== "undefined" && atlasAuthClient)
+                ? atlasAuthClient
+                : window.supabase.createClient(
+                    SUPABASE_URL,
+                    SUPABASE_KEY
+                  );
 
 
         supabaseConnected = true;
