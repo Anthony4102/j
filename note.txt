@@ -1,0 +1,1 @@
+its working now, moving on. add humburger function in the dashboard so i can access the side panel or settings in phone. also make the UI of the budget tracker more modern minimalist its buttons, back button, also make the dark mode also change in the budget tracker not just the dashboard.
